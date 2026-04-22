@@ -843,11 +843,69 @@ async function sendAction(params) {
 }
 
 // ═════════════════════════════════════════
-// POLLING
+// SMART POLLING
+// Pausa quando aba não visível OU usuário inativo há 10min
+// Retoma automaticamente quando volta a interagir
 // ═════════════════════════════════════════
+const IDLE_TIMEOUT_MS = 10 * 60 * 1000; // 10 minutos sem interação
+let lastActivity = Date.now();
+let isPausedReason = null; // null | "hidden" | "idle"
+
+function markActivity() {
+  lastActivity = Date.now();
+  // Se estava pausado por idle e agora tem atividade, retoma imediatamente
+  if (isPausedReason === "idle") {
+    isPausedReason = null;
+    setSyncStatus("ok");
+    fetchState();
+  }
+}
+
+["mousemove", "keydown", "click", "scroll", "touchstart"].forEach(evt => {
+  document.addEventListener(evt, markActivity, { passive: true });
+});
+
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) {
+    isPausedReason = "hidden";
+    setSyncStatus("ok", "Pausado (aba oculta)");
+  } else {
+    if (isPausedReason === "hidden") {
+      isPausedReason = null;
+      markActivity();
+      fetchState(); // Pega o estado mais recente ao voltar pra aba
+    }
+  }
+});
+
+function shouldPoll() {
+  if (isLocalEdit) return false;
+  if (document.hidden) {
+    if (isPausedReason !== "hidden") {
+      isPausedReason = "hidden";
+      setSyncStatus("ok", "Pausado (aba oculta)");
+    }
+    return false;
+  }
+  if (Date.now() - lastActivity > IDLE_TIMEOUT_MS) {
+    if (isPausedReason !== "idle") {
+      isPausedReason = "idle";
+      setSyncStatus("ok", "Pausado (inativo)");
+    }
+    return false;
+  }
+  if (isPausedReason && !document.hidden) {
+    isPausedReason = null;
+    setSyncStatus("ok");
+  }
+  return true;
+}
+
 function startPolling() {
   if (pollTimer) clearInterval(pollTimer);
-  pollTimer = setInterval(() => { if (!isLocalEdit) fetchState(); }, POLL_INTERVAL);
+  pollTimer = setInterval(() => {
+    if (shouldPoll()) fetchState();
+  }, POLL_INTERVAL);
 }
 
 // ═════════════════════════════════════════
