@@ -7,37 +7,22 @@
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #0a0e14;
-    --bg2: #0d1117;
-    --surface: #12161e;
-    --surface2: #161b22;
-    --surface-hover: #1c2333;
-    --border: #1a1f2e;
-    --border2: #30363d;
-    --text: #e6edf3;
-    --text-dim: #8b949e;
-    --text-muted: #484f58;
-    --accent: #58a6ff;
-    --green: #3fb950;
-    --yellow: #d29922;
-    --red: #f85149;
-    --purple: #bc8cff;
-    --orange: #db6d28;
+    --bg: #0a0e14; --bg2: #0d1117; --surface: #12161e; --surface2: #161b22;
+    --surface-hover: #1c2333; --border: #1a1f2e; --border2: #30363d;
+    --text: #e6edf3; --text-dim: #8b949e; --text-muted: #484f58;
+    --accent: #58a6ff; --green: #3fb950; --yellow: #d29922;
+    --red: #f85149; --purple: #bc8cff; --orange: #db6d28;
   }
   * { margin:0; padding:0; box-sizing:border-box; }
   html { height: 100%; }
   body {
-    background: var(--bg);
-    color: var(--text-dim);
+    background: var(--bg); color: var(--text-dim);
     font-family: 'Outfit', -apple-system, sans-serif;
-    line-height: 1.6;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
+    line-height: 1.6; min-height: 100vh;
+    display: flex; flex-direction: column;
   }
   button { font-family: inherit; }
 
-  /* ── SETUP MODAL ── */
   .setup-modal {
     position: fixed; inset: 0; background: rgba(5,8,12,0.95);
     z-index: 1000; display: flex; align-items: center; justify-content: center;
@@ -68,7 +53,6 @@
   }
   .setup-box button:hover { background: #79b8ff; }
 
-  /* ── TOP BAR ── */
   .topbar {
     display: flex; align-items: center; justify-content: space-between;
     padding: 0 24px; height: 52px;
@@ -100,7 +84,6 @@
   .sync-dot.error { background: var(--red); animation: none; }
   @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
 
-  /* ── TABS ── */
   .tabs {
     display: flex; padding: 0 24px;
     background: var(--bg2); border-bottom: 1px solid var(--border);
@@ -116,11 +99,9 @@
   .tab-btn.active { color: var(--text); border-bottom-color: var(--accent); }
   .tab-btn .tab-icon { font-size: 15px; }
 
-  /* ── PANELS ── */
   .panel { display: none; flex: 1; overflow: hidden; }
   .panel.active { display: flex; flex-direction: column; }
 
-  /* ═══ KANBAN ═══ */
   .kanban-toolbar {
     display: flex; align-items: center; justify-content: space-between;
     padding: 12px 24px; border-bottom: 1px solid var(--border);
@@ -267,7 +248,6 @@
   .assignee-opt:hover { background: #252d3a; }
   .assignee-opt.selected { background: rgba(88,166,255,0.1); }
 
-  /* ═══ GUIDE ═══ */
   .guide-panel { overflow-y: auto; }
   .guide-inner { max-width: 900px; margin: 0 auto; padding: 40px 24px 80px; }
   .guide-hero {
@@ -410,17 +390,15 @@
 </head>
 <body>
 
-<!-- ═══ SETUP MODAL (primeira vez) ═══ -->
 <div class="setup-modal hidden" id="setupModal">
   <div class="setup-box">
     <h2>// Configuração inicial</h2>
-    <p>Cole a URL do Web App que você publicou no Google Apps Script. Ela começa com <code>https://script.google.com/macros/s/...</code></p>
-    <input type="text" id="urlInput" placeholder="https://script.google.com/macros/s/..." />
+    <p>Cole a URL do Web App publicado no Google Apps Script. Começa com <code>https://script.google.com/...</code></p>
+    <input type="text" id="urlInput" placeholder="https://script.google.com/..." />
     <button id="saveUrlBtn">Conectar</button>
   </div>
 </div>
 
-<!-- ═══ TOP BAR ═══ -->
 <div class="topbar">
   <div class="topbar-left">
     <span class="topbar-logo">CIS</span>
@@ -433,13 +411,11 @@
   </div>
 </div>
 
-<!-- ═══ TABS ═══ -->
 <div class="tabs">
   <button class="tab-btn active" data-tab="kanban"><span class="tab-icon">▦</span> Kanban</button>
   <button class="tab-btn" data-tab="guide"><span class="tab-icon">📋</span> Passo a Passo</button>
 </div>
 
-<!-- ═══ KANBAN PANEL ═══ -->
 <div class="panel active" id="panel-kanban">
   <div class="kanban-toolbar">
     <div class="members-row" id="membersPills"></div>
@@ -460,7 +436,6 @@
   <div class="kanban-columns" id="kanbanColumns"></div>
 </div>
 
-<!-- ═══ GUIDE PANEL ═══ -->
 <div class="panel guide-panel" id="panel-guide">
 <div class="guide-inner">
 
@@ -476,17 +451,17 @@
   <div class="step-box">
     <div class="step-header"><div class="step-num pc">01</div><div class="step-title">Abra o Horde e navegue até Fortnite/Main</div><div class="step-toggle">▼</div></div>
     <div class="step-content">
-      <p>No menu superior do Horde, siga o caminho:</p>
+      <p>No menu superior do Horde:</p>
       <div class="nav-path"><span>Fortnite</span><span class="sep">›</span><span>General</span><span class="sep">›</span><span>Main</span></div>
-      <p>Isso vai te levar à lista de jobs do stream <strong>//Fortnite/Main</strong>.</p>
+      <p>Isso leva à lista de jobs do stream <strong>//Fortnite/Main</strong>.</p>
     </div>
   </div>
 
   <div class="step-box">
     <div class="step-header"><div class="step-num pc">02</div><div class="step-title">Identifique as abas "UE Tests" e "UE Builds"</div><div class="step-toggle">▼</div></div>
     <div class="step-content">
-      <p><strong>UE Tests</strong> — visível diretamente na barra de abas.</p>
-      <p><strong>UE Builds</strong> — escondida num menu dropdown (clique no <code>···</code>).</p>
+      <p><strong>UE Tests</strong> — visível diretamente na barra.</p>
+      <p><strong>UE Builds</strong> — dentro do dropdown <code>···</code>.</p>
       <div class="tip-box"><strong>Dica:</strong> A maioria dos jobs está na aba UE Tests.</div>
     </div>
   </div>
@@ -521,7 +496,7 @@
         <div class="color-item"><div class="cdot" style="background:var(--red)"></div> Error</div>
         <div class="color-item"><div class="cdot" style="background:var(--accent)"></div> Em execução</div>
       </div>
-      <div class="tip-box"><strong>Dica:</strong> A maioria termina entre 13h-15h (CEST). Se demorar, escreva no <code>#buildfarm-support-ext</code>.</div>
+      <div class="tip-box"><strong>Dica:</strong> Jobs terminam entre 13h-15h CEST. Se demorar, escreva no <code>#buildfarm-support-ext</code>.</div>
     </div>
   </div>
 
@@ -530,7 +505,7 @@
   <div class="step-box">
     <div class="step-header"><div class="step-num pa">05</div><div class="step-title">Abra cada erro/warning em nova aba</div><div class="step-toggle">▼</div></div>
     <div class="step-content">
-      <p>Abaixo dos tiles, você verá <strong>pontos com nomes de steps</strong> com erros. Clique direito → abrir em nova aba.</p>
+      <p>Abaixo dos tiles, <strong>pontos com nomes de steps</strong> mostram os problemas. Clique direito → abrir em nova aba.</p>
     </div>
   </div>
 
@@ -542,7 +517,6 @@
         <li>Se sim — confira se corresponde ao erro</li>
         <li>Se não — prossiga</li>
       </ul>
-      <div class="tip-box"><strong>Dica:</strong> A Health tab mostra o ciclo de vida do erro.</div>
     </div>
   </div>
 
@@ -690,17 +664,63 @@ const COLS = [
 ];
 
 const AVATARS = ["🟣","🔵","🟢","🟠","🔴","⚪"];
-const POLL_INTERVAL = 4000; // 4 segundos
+const POLL_INTERVAL = 5000; // 5s
 
 // ═════════════════════════════════════════
 // STATE
 // ═════════════════════════════════════════
 let backendUrl = localStorage.getItem("cis-backend-url") || "";
 let members = [];
-let cardsMap = {}; // jobId -> { column, assignee }
+let cardsMap = {};
 let dragJobId = null;
 let pollTimer = null;
-let isLocalEdit = false; // trava polling durante edição local
+let isLocalEdit = false;
+let jsonpCounter = 0;
+
+// ═════════════════════════════════════════
+// JSONP — core trick para contornar CORS
+// ═════════════════════════════════════════
+// Cria uma <script> tag apontando pro backend com um callback único.
+// O Apps Script retorna "callback({...data...})", que executa o callback
+// quando a tag carrega. Funciona porque <script> não é restrita por CORS.
+function jsonp(url, params, timeoutMs) {
+  timeoutMs = timeoutMs || 15000;
+  return new Promise((resolve, reject) => {
+    const cbName = "cisCb_" + (++jsonpCounter) + "_" + Date.now();
+    const qs = new URLSearchParams(params || {});
+    qs.set("callback", cbName);
+    const fullUrl = url + (url.indexOf("?") >= 0 ? "&" : "?") + qs.toString();
+
+    const script = document.createElement("script");
+    let done = false;
+
+    const cleanup = () => {
+      if (window[cbName]) { try { delete window[cbName]; } catch(_) { window[cbName] = undefined; } }
+      if (script.parentNode) script.parentNode.removeChild(script);
+    };
+
+    const timer = setTimeout(() => {
+      if (done) return;
+      done = true; cleanup();
+      reject(new Error("JSONP timeout"));
+    }, timeoutMs);
+
+    window[cbName] = (data) => {
+      if (done) return;
+      done = true; clearTimeout(timer); cleanup();
+      resolve(data);
+    };
+
+    script.onerror = () => {
+      if (done) return;
+      done = true; clearTimeout(timer); cleanup();
+      reject(new Error("Script load failed"));
+    };
+
+    script.src = fullUrl;
+    document.head.appendChild(script);
+  });
+}
 
 // ═════════════════════════════════════════
 // DATE & TABS
@@ -717,7 +737,6 @@ document.querySelectorAll(".tab-btn").forEach(btn => {
   });
 });
 
-// Guide accordion
 document.querySelectorAll(".step-box .step-header").forEach(h => {
   h.addEventListener("click", () => h.parentElement.classList.toggle("open"));
 });
@@ -762,36 +781,39 @@ document.getElementById("urlInput").addEventListener("keydown", e => {
 // ═════════════════════════════════════════
 // SYNC STATUS
 // ═════════════════════════════════════════
-function setSyncStatus(status) {
+function setSyncStatus(status, msg) {
   const dot = document.getElementById("syncDot");
   const text = document.getElementById("syncText");
   dot.className = "sync-dot";
-  if (status === "syncing") { dot.classList.add("syncing"); text.textContent = "Sincronizando..."; }
-  else if (status === "error") { dot.classList.add("error"); text.textContent = "Erro de conexão"; }
-  else { text.textContent = "Conectado"; }
+  if (status === "syncing") { dot.classList.add("syncing"); text.textContent = msg || "Sincronizando..."; }
+  else if (status === "error") { dot.classList.add("error"); text.textContent = msg || "Erro de conexão"; }
+  else { text.textContent = msg || "Conectado"; }
 }
 
 // ═════════════════════════════════════════
-// BACKEND CALLS
+// BACKEND CALLS (via JSONP)
 // ═════════════════════════════════════════
+function applyState(data) {
+  if (!data || !data.ok) return;
+  members = data.members || [];
+  cardsMap = {};
+  (data.cards || []).forEach(c => {
+    cardsMap[c.jobId] = { column: c.column || "pending", assignee: c.assignee || null };
+  });
+  JOBS.forEach(j => { if (!cardsMap[j.id]) cardsMap[j.id] = { column:"pending", assignee:null }; });
+}
+
 async function fetchState() {
   if (!backendUrl) return;
   try {
     setSyncStatus("syncing");
-    const res = await fetch(backendUrl, { method: "GET", redirect: "follow" });
-    const data = await res.json();
+    const data = await jsonp(backendUrl, { action: "getState" });
     if (data.ok) {
-      members = data.members || [];
-      cardsMap = {};
-      (data.cards || []).forEach(c => {
-        cardsMap[c.jobId] = { column: c.column || "pending", assignee: c.assignee || null };
-      });
-      // Garante que todos os jobs existam no map
-      JOBS.forEach(j => { if (!cardsMap[j.id]) cardsMap[j.id] = { column:"pending", assignee:null }; });
+      applyState(data);
       render();
       setSyncStatus("ok");
     } else {
-      setSyncStatus("error");
+      setSyncStatus("error", "Erro: " + (data.error || "desconhecido"));
     }
   } catch (err) {
     console.error("Erro ao buscar estado:", err);
@@ -799,29 +821,18 @@ async function fetchState() {
   }
 }
 
-async function postAction(payload) {
+async function sendAction(params) {
   if (!backendUrl) return;
   isLocalEdit = true;
   try {
     setSyncStatus("syncing");
-    const res = await fetch(backendUrl, {
-      method: "POST",
-      redirect: "follow",
-      headers: { "Content-Type": "text/plain;charset=utf-8" }, // evita CORS preflight
-      body: JSON.stringify(payload)
-    });
-    const data = await res.json();
+    const data = await jsonp(backendUrl, params);
     if (data.ok) {
-      members = data.members || [];
-      cardsMap = {};
-      (data.cards || []).forEach(c => {
-        cardsMap[c.jobId] = { column: c.column || "pending", assignee: c.assignee || null };
-      });
-      JOBS.forEach(j => { if (!cardsMap[j.id]) cardsMap[j.id] = { column:"pending", assignee:null }; });
+      applyState(data);
       render();
       setSyncStatus("ok");
     } else {
-      setSyncStatus("error");
+      setSyncStatus("error", "Erro: " + (data.error || "desconhecido"));
     }
   } catch (err) {
     console.error("Erro ao salvar:", err);
@@ -843,16 +854,15 @@ function startPolling() {
 // ACTIONS
 // ═════════════════════════════════════════
 function moveCard(jobId, column) {
-  // Optimistic update
   cardsMap[jobId] = { ...cardsMap[jobId], column };
   render();
-  postAction({ action: "moveCard", jobId, column });
+  sendAction({ action: "moveCard", jobId, column });
 }
 
 function assignCard(jobId, memberId) {
   cardsMap[jobId] = { ...cardsMap[jobId], assignee: memberId };
   render();
-  postAction({ action: "assignCard", jobId, assignee: memberId });
+  sendAction({ action: "assignCard", jobId, assignee: memberId || "" });
 }
 
 function addMember() {
@@ -867,20 +877,20 @@ function addMember() {
   inp.value = "";
   members.push(member);
   render();
-  postAction({ action: "addMember", member });
+  sendAction({ action: "addMember", id: member.id, name: member.name, avatar: member.avatar });
 }
 
 function removeMember(id) {
   members = members.filter(m => m.id !== id);
   Object.keys(cardsMap).forEach(k => { if (cardsMap[k].assignee === id) cardsMap[k].assignee = null; });
   render();
-  postAction({ action: "removeMember", memberId: id });
+  sendAction({ action: "removeMember", memberId: id });
 }
 
 function resetDay() {
   JOBS.forEach(j => { cardsMap[j.id] = { column:"pending", assignee:null }; });
   render();
-  postAction({ action: "resetDay" });
+  sendAction({ action: "resetDay" });
 }
 
 function getMember(id) { return members.find(m => m.id === id); }
@@ -909,12 +919,10 @@ document.getElementById("changeUrlBtn").addEventListener("click", () => {
 // RENDER
 // ═════════════════════════════════════════
 function render() {
-  // Pills
   document.getElementById("membersPills").innerHTML = members.map(m =>
     `<span class="member-pill"><span style="font-size:13px">${m.avatar}</span> ${escapeHtml(m.name)}</span>`
   ).join("");
 
-  // Settings members
   const smEl = document.getElementById("settingsMembers");
   smEl.innerHTML = members.map(m =>
     `<div class="settings-member-row">
@@ -926,7 +934,6 @@ function render() {
     b.addEventListener("click", e => { e.stopPropagation(); removeMember(b.dataset.mid); });
   });
 
-  // Columns
   const colsEl = document.getElementById("kanbanColumns");
   colsEl.innerHTML = "";
 
@@ -1038,7 +1045,6 @@ function escapeHtml(s) {
 // INIT
 // ═════════════════════════════════════════
 async function init() {
-  // Inicializa cardsMap com jobs vazios
   JOBS.forEach(j => { cardsMap[j.id] = { column:"pending", assignee:null }; });
   render();
   await fetchState();
@@ -1047,7 +1053,6 @@ async function init() {
 
 if (!backendUrl) {
   showSetupModal();
-  // Render inicial vazio enquanto espera URL
   JOBS.forEach(j => { cardsMap[j.id] = { column:"pending", assignee:null }; });
   render();
 } else {
