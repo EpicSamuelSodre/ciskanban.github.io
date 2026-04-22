@@ -1,0 +1,1060 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CIS Horde — Fortnite/Main</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0e14;
+    --bg2: #0d1117;
+    --surface: #12161e;
+    --surface2: #161b22;
+    --surface-hover: #1c2333;
+    --border: #1a1f2e;
+    --border2: #30363d;
+    --text: #e6edf3;
+    --text-dim: #8b949e;
+    --text-muted: #484f58;
+    --accent: #58a6ff;
+    --green: #3fb950;
+    --yellow: #d29922;
+    --red: #f85149;
+    --purple: #bc8cff;
+    --orange: #db6d28;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html { height: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--text-dim);
+    font-family: 'Outfit', -apple-system, sans-serif;
+    line-height: 1.6;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+  button { font-family: inherit; }
+
+  /* ── SETUP MODAL ── */
+  .setup-modal {
+    position: fixed; inset: 0; background: rgba(5,8,12,0.95);
+    z-index: 1000; display: flex; align-items: center; justify-content: center;
+    backdrop-filter: blur(8px); padding: 20px;
+  }
+  .setup-modal.hidden { display: none; }
+  .setup-box {
+    background: var(--surface2); border: 1px solid var(--border2);
+    border-radius: 14px; padding: 32px; max-width: 520px; width: 100%;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.6);
+  }
+  .setup-box h2 {
+    font-family: 'IBM Plex Mono', monospace; font-size: 18px;
+    color: var(--accent); margin-bottom: 8px;
+  }
+  .setup-box p { font-size: 13px; color: var(--text-dim); margin-bottom: 16px; }
+  .setup-box input {
+    width: 100%; background: var(--bg2); border: 1px solid var(--border2);
+    border-radius: 7px; padding: 11px 14px; color: var(--text);
+    font-size: 13px; font-family: 'IBM Plex Mono', monospace;
+    outline: none; margin-bottom: 14px;
+  }
+  .setup-box input:focus { border-color: var(--accent); }
+  .setup-box button {
+    width: 100%; background: var(--accent); border: none;
+    border-radius: 7px; padding: 11px; color: var(--bg);
+    font-size: 14px; font-weight: 700; cursor: pointer;
+  }
+  .setup-box button:hover { background: #79b8ff; }
+
+  /* ── TOP BAR ── */
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 24px; height: 52px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg2); flex-shrink: 0;
+  }
+  .topbar-left { display: flex; align-items: center; gap: 10px; }
+  .topbar-logo {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px; font-weight: 700; color: var(--green);
+    background: rgba(63,185,80,0.1); padding: 3px 8px; border-radius: 4px;
+    letter-spacing: 1px;
+  }
+  .topbar-title { font-family: 'Outfit', sans-serif; font-size: 17px; font-weight: 700; color: var(--text); }
+  .topbar-date {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px; color: var(--text-muted); margin-left: 8px;
+  }
+  .sync-badge {
+    display: flex; align-items: center; gap: 6px;
+    font-family: 'IBM Plex Mono', monospace; font-size: 11px;
+    color: var(--text-muted);
+  }
+  .sync-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--green); animation: pulse 2s infinite;
+  }
+  .sync-dot.syncing { background: var(--yellow); animation: pulse 0.6s infinite; }
+  .sync-dot.error { background: var(--red); animation: none; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+  /* ── TABS ── */
+  .tabs {
+    display: flex; padding: 0 24px;
+    background: var(--bg2); border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .tab-btn {
+    padding: 10px 20px; background: none; border: none;
+    color: var(--text-muted); font-size: 13px; font-weight: 500;
+    cursor: pointer; border-bottom: 2px solid transparent;
+    transition: all 0.15s; display: flex; align-items: center; gap: 7px;
+  }
+  .tab-btn:hover { color: var(--text-dim); }
+  .tab-btn.active { color: var(--text); border-bottom-color: var(--accent); }
+  .tab-btn .tab-icon { font-size: 15px; }
+
+  /* ── PANELS ── */
+  .panel { display: none; flex: 1; overflow: hidden; }
+  .panel.active { display: flex; flex-direction: column; }
+
+  /* ═══ KANBAN ═══ */
+  .kanban-toolbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 24px; border-bottom: 1px solid var(--border);
+    background: var(--bg); flex-wrap: wrap; gap: 8px;
+  }
+  .members-row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+  .member-pill {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: var(--surface2); border: 1px solid var(--border2);
+    border-radius: 20px; padding: 3px 10px 3px 6px;
+    font-size: 12px; color: var(--text-dim);
+  }
+  .gear-btn {
+    background: transparent; border: 1px solid var(--border2);
+    border-radius: 8px; padding: 5px 10px;
+    color: var(--text-muted); cursor: pointer; font-size: 15px; position: relative;
+  }
+  .gear-btn:hover { background: var(--surface2); }
+
+  .settings-drop {
+    display: none; position: absolute; top: calc(100% + 8px); right: 0;
+    background: var(--surface2); border: 1px solid var(--border2);
+    border-radius: 12px; padding: 16px; width: 300px;
+    z-index: 200; box-shadow: 0 16px 48px rgba(0,0,0,0.6);
+  }
+  .settings-drop.open { display: block; }
+  .settings-label {
+    font-size: 11px; font-family: 'IBM Plex Mono', monospace;
+    color: var(--accent); letter-spacing: 1px;
+    text-transform: uppercase; margin-bottom: 10px;
+  }
+  .settings-member-row {
+    display: flex; align-items: center; justify-content: space-between; padding: 5px 0;
+  }
+  .settings-member-row span { font-size: 13px; color: var(--text-dim); display: flex; align-items: center; gap: 6px; }
+  .remove-btn {
+    background: none; border: none; color: var(--red);
+    cursor: pointer; font-size: 14px; padding: 2px 6px; border-radius: 4px;
+  }
+  .add-row { display: flex; gap: 6px; margin-top: 10px; }
+  .add-row input {
+    flex: 1; background: var(--bg2); border: 1px solid var(--border2);
+    border-radius: 6px; padding: 6px 10px; color: var(--text);
+    font-size: 13px; outline: none; font-family: inherit;
+  }
+  .add-row input:focus { border-color: var(--accent); }
+  .add-btn {
+    background: #238636; border: none; border-radius: 6px;
+    padding: 6px 14px; color: #fff; font-size: 14px;
+    cursor: pointer; font-weight: 700;
+  }
+  .reset-btn, .url-btn {
+    width: 100%; padding: 8px; border-radius: 6px;
+    font-size: 12px; cursor: pointer;
+    font-family: 'IBM Plex Mono', monospace;
+    margin-top: 8px;
+  }
+  .reset-btn {
+    background: rgba(248,81,73,0.08); border: 1px solid rgba(248,81,73,0.2); color: var(--red);
+  }
+  .reset-btn:hover { background: rgba(248,81,73,0.14); }
+  .url-btn {
+    background: rgba(88,166,255,0.08); border: 1px solid rgba(88,166,255,0.2); color: var(--accent);
+  }
+  .url-btn:hover { background: rgba(88,166,255,0.14); }
+
+  .kanban-columns { display: flex; flex: 1; overflow-x: auto; overflow-y: auto; }
+  .kanban-col {
+    flex: 1; min-width: 195px;
+    border-right: 1px solid var(--border);
+    display: flex; flex-direction: column;
+    transition: background 0.12s;
+  }
+  .kanban-col:last-child { border-right: none; }
+  .kanban-col.drag-over { background: rgba(88,166,255,0.03); }
+  .col-header {
+    padding: 14px 14px 10px;
+    border-bottom: 2px solid transparent;
+    position: sticky; top: 0;
+    background: var(--bg); z-index: 10;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .col-header-left { display: flex; align-items: center; gap: 7px; }
+  .col-icon { font-size: 13px; }
+  .col-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px; font-weight: 600;
+    letter-spacing: 0.5px; text-transform: uppercase;
+  }
+  .col-count {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px; color: var(--text-muted);
+    background: var(--surface2); padding: 1px 7px; border-radius: 10px;
+  }
+  .col-cards { padding: 6px 8px; flex: 1; }
+  .col-empty {
+    padding: 24px 12px; text-align: center;
+    color: var(--border2); font-size: 12px;
+    font-family: 'IBM Plex Mono', monospace;
+    border: 1px dashed var(--border); border-radius: 8px; margin-top: 4px;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px; padding: 11px 13px;
+    margin-bottom: 5px; cursor: grab;
+    transition: border-color 0.1s, background 0.1s;
+  }
+  .card:hover { border-color: var(--border2); background: #151b25; }
+  .card.dragging { opacity: 0.4; }
+  .card-title { font-size: 13px; font-weight: 500; color: var(--text); margin-bottom: 6px; line-height: 1.35; }
+  .card-footer { display: flex; align-items: center; justify-content: space-between; gap: 6px; flex-wrap: wrap; }
+  .card-tags { display: flex; gap: 4px; align-items: center; }
+  .tag {
+    font-size: 10px; font-family: 'IBM Plex Mono', monospace;
+    padding: 2px 6px; border-radius: 3px;
+  }
+  .tag-tests { color: var(--accent); background: rgba(88,166,255,0.1); }
+  .tag-builds { color: var(--purple); background: rgba(188,140,255,0.1); }
+  .tag-scope { color: var(--yellow); background: rgba(210,153,34,0.1); }
+
+  .assignee-btn {
+    background: none; border: 1px solid transparent;
+    border-radius: 12px; padding: 2px 8px;
+    cursor: pointer; font-size: 12px; color: var(--text-muted);
+    display: flex; align-items: center; gap: 4px; font-family: inherit;
+    position: relative;
+  }
+  .assignee-btn:hover { border-color: var(--border2); }
+  .assignee-btn.has-person { color: var(--text-dim); }
+  .assignee-drop {
+    display: none; position: absolute; bottom: calc(100% + 4px); right: 0;
+    background: var(--surface-hover); border: 1px solid var(--border2);
+    border-radius: 8px; padding: 5px; z-index: 60;
+    min-width: 130px; box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+  }
+  .assignee-drop.open { display: block; }
+  .assignee-opt {
+    padding: 5px 8px; font-size: 12px; color: var(--text-dim);
+    cursor: pointer; border-radius: 4px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .assignee-opt:hover { background: #252d3a; }
+  .assignee-opt.selected { background: rgba(88,166,255,0.1); }
+
+  /* ═══ GUIDE ═══ */
+  .guide-panel { overflow-y: auto; }
+  .guide-inner { max-width: 900px; margin: 0 auto; padding: 40px 24px 80px; }
+  .guide-hero {
+    text-align: center; margin-bottom: 40px;
+    padding: 40px 24px;
+    background: linear-gradient(135deg, rgba(88,166,255,0.07) 0%, rgba(188,140,255,0.07) 100%);
+    border: 1px solid var(--border); border-radius: 14px;
+    position: relative; overflow: hidden;
+  }
+  .guide-hero::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, var(--accent), var(--purple), var(--accent));
+  }
+  .guide-hero h2 {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 24px; font-weight: 700; margin-bottom: 6px;
+    background: linear-gradient(135deg, var(--accent), var(--purple));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .guide-hero p { color: var(--text-muted); font-size: 14px; }
+  .expand-all-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 7px 15px; background: rgba(88,166,255,0.1);
+    border: 1px solid rgba(88,166,255,0.2); border-radius: 8px;
+    color: var(--accent); font-size: 13px; cursor: pointer;
+    margin-bottom: 20px; font-family: inherit; transition: all 0.15s;
+  }
+  .expand-all-btn:hover { background: rgba(88,166,255,0.16); }
+
+  .phase-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px; text-transform: uppercase;
+    letter-spacing: 1.5px; padding: 28px 0 10px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .phase-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+  .phase-label.check { color: var(--green); }
+  .phase-label.analyze { color: var(--yellow); }
+  .phase-label.report { color: var(--red); }
+  .phase-label.end { color: var(--purple); }
+
+  .step-box {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 10px; margin-bottom: 10px; overflow: hidden;
+    transition: border-color 0.15s;
+  }
+  .step-box:hover { border-color: rgba(88,166,255,0.25); }
+  .step-header { display: flex; align-items: center; gap: 14px; padding: 16px 20px; cursor: pointer; user-select: none; }
+  .step-num {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px; font-weight: 700; color: var(--bg);
+    width: 30px; height: 30px; border-radius: 7px;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .step-num.pc { background: var(--green); }
+  .step-num.pa { background: var(--yellow); }
+  .step-num.pr { background: var(--red); }
+  .step-num.pe { background: var(--purple); }
+  .step-title { font-weight: 600; font-size: 15px; flex: 1; color: var(--text); }
+  .step-toggle { color: var(--text-muted); font-size: 18px; transition: transform 0.2s; }
+  .step-box.open .step-toggle { transform: rotate(180deg); }
+  .step-content { display: none; padding: 0 20px 20px 64px; }
+  .step-box.open .step-content { display: block; }
+  .step-content p { margin-bottom: 10px; font-size: 14px; line-height: 1.7; }
+  .step-content p strong { color: var(--text); }
+
+  .tip-box, .warn-box, .danger-box {
+    padding: 10px 14px; border-radius: 0 7px 7px 0;
+    margin: 10px 0; font-size: 13px;
+  }
+  .tip-box { background: rgba(88,166,255,0.07); border-left: 3px solid var(--accent); }
+  .tip-box strong { color: var(--accent); }
+  .warn-box { background: rgba(210,153,34,0.07); border-left: 3px solid var(--yellow); }
+  .warn-box strong { color: var(--yellow); }
+  .danger-box { background: rgba(248,81,73,0.07); border-left: 3px solid var(--red); }
+  .danger-box strong { color: var(--red); }
+
+  .color-legend { display: grid; grid-template-columns: repeat(2,1fr); gap: 7px; margin: 14px 0; }
+  .color-item {
+    display: flex; align-items: center; gap: 9px;
+    padding: 7px 11px; background: rgba(255,255,255,0.02); border-radius: 7px; font-size: 13px;
+  }
+  .cdot { width: 13px; height: 13px; border-radius: 3px; flex-shrink: 0; }
+
+  .nav-path {
+    font-family: 'IBM Plex Mono', monospace; font-size: 13px;
+    color: var(--text-muted); background: rgba(255,255,255,0.03);
+    padding: 9px 15px; border-radius: 7px; margin: 10px 0;
+    display: flex; align-items: center; gap: 7px;
+  }
+  .nav-path span { color: var(--accent); }
+  .nav-path .sep { color: var(--text-muted); opacity: 0.35; }
+
+  .jtable { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 12px; }
+  .jtable th {
+    text-align: left; padding: 9px 10px; background: rgba(255,255,255,0.03);
+    color: var(--accent); font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px; font-weight: 600; border-bottom: 1px solid var(--border);
+  }
+  .jtable td { padding: 7px 10px; border-bottom: 1px solid rgba(26,31,46,0.6); font-size: 12px; }
+  .jtable tr:hover td { background: rgba(255,255,255,0.015); }
+
+  code {
+    font-family: 'IBM Plex Mono', monospace;
+    background: rgba(255,255,255,0.05); padding: 2px 5px;
+    border-radius: 3px; font-size: 12px; color: var(--accent);
+  }
+
+  .cklist { list-style: none; margin: 10px 0; }
+  .cklist li {
+    position: relative; padding: 5px 0 5px 26px;
+    font-size: 13px; cursor: pointer; user-select: none;
+  }
+  .cklist li::before {
+    content: '□'; position: absolute; left: 0;
+    color: var(--accent); font-family: 'IBM Plex Mono', monospace;
+    font-size: 15px; line-height: 1.4;
+  }
+  .cklist li.checked::before { content: '■'; color: var(--green); }
+  .cklist li.checked { text-decoration: line-through; opacity: 0.5; }
+
+  .slack-fmt {
+    background: rgba(255,255,255,0.03); border: 1px solid var(--border);
+    border-radius: 7px; padding: 14px;
+    font-family: 'IBM Plex Mono', monospace; font-size: 12px;
+    line-height: 1.8; color: var(--text); white-space: pre-wrap;
+  }
+
+  @media (max-width: 700px) {
+    .topbar { padding: 0 14px; }
+    .tabs { padding: 0 14px; }
+    .tab-btn { padding: 9px 12px; font-size: 12px; }
+    .kanban-toolbar { padding: 10px 14px; }
+    .guide-inner { padding: 24px 14px 60px; }
+    .step-content { padding-left: 20px; }
+    .color-legend { grid-template-columns: 1fr; }
+    .topbar-date { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══ SETUP MODAL (primeira vez) ═══ -->
+<div class="setup-modal hidden" id="setupModal">
+  <div class="setup-box">
+    <h2>// Configuração inicial</h2>
+    <p>Cole a URL do Web App que você publicou no Google Apps Script. Ela começa com <code>https://script.google.com/macros/s/...</code></p>
+    <input type="text" id="urlInput" placeholder="https://script.google.com/macros/s/..." />
+    <button id="saveUrlBtn">Conectar</button>
+  </div>
+</div>
+
+<!-- ═══ TOP BAR ═══ -->
+<div class="topbar">
+  <div class="topbar-left">
+    <span class="topbar-logo">CIS</span>
+    <span class="topbar-title">Horde — Fortnite/Main</span>
+    <span class="topbar-date" id="todayDate"></span>
+  </div>
+  <div class="sync-badge">
+    <span class="sync-dot" id="syncDot"></span>
+    <span id="syncText">Conectado</span>
+  </div>
+</div>
+
+<!-- ═══ TABS ═══ -->
+<div class="tabs">
+  <button class="tab-btn active" data-tab="kanban"><span class="tab-icon">▦</span> Kanban</button>
+  <button class="tab-btn" data-tab="guide"><span class="tab-icon">📋</span> Passo a Passo</button>
+</div>
+
+<!-- ═══ KANBAN PANEL ═══ -->
+<div class="panel active" id="panel-kanban">
+  <div class="kanban-toolbar">
+    <div class="members-row" id="membersPills"></div>
+    <div style="position:relative;">
+      <button class="gear-btn" id="gearBtn">⚙</button>
+      <div class="settings-drop" id="settingsDrop">
+        <div class="settings-label">Equipe</div>
+        <div id="settingsMembers"></div>
+        <div class="add-row">
+          <input id="newMemberInput" placeholder="Nome..." />
+          <button class="add-btn" id="addMemberBtn">+</button>
+        </div>
+        <button class="reset-btn" id="resetBtn">↻ Reset do dia (volta tudo p/ Pendente)</button>
+        <button class="url-btn" id="changeUrlBtn">⚙ Trocar URL do backend</button>
+      </div>
+    </div>
+  </div>
+  <div class="kanban-columns" id="kanbanColumns"></div>
+</div>
+
+<!-- ═══ GUIDE PANEL ═══ -->
+<div class="panel guide-panel" id="panel-guide">
+<div class="guide-inner">
+
+  <div class="guide-hero">
+    <h2>// Guia Passo a Passo</h2>
+    <p>Verificação CIS Horde — //Fortnite/Main</p>
+  </div>
+
+  <button class="expand-all-btn" id="expandAllBtn">▼ Expandir tudo</button>
+
+  <div class="phase-label check">Fase 1 — Acessar os Jobs</div>
+
+  <div class="step-box">
+    <div class="step-header"><div class="step-num pc">01</div><div class="step-title">Abra o Horde e navegue até Fortnite/Main</div><div class="step-toggle">▼</div></div>
+    <div class="step-content">
+      <p>No menu superior do Horde, siga o caminho:</p>
+      <div class="nav-path"><span>Fortnite</span><span class="sep">›</span><span>General</span><span class="sep">›</span><span>Main</span></div>
+      <p>Isso vai te levar à lista de jobs do stream <strong>//Fortnite/Main</strong>.</p>
+    </div>
+  </div>
+
+  <div class="step-box">
+    <div class="step-header"><div class="step-num pc">02</div><div class="step-title">Identifique as abas "UE Tests" e "UE Builds"</div><div class="step-toggle">▼</div></div>
+    <div class="step-content">
+      <p><strong>UE Tests</strong> — visível diretamente na barra de abas.</p>
+      <p><strong>UE Builds</strong> — escondida num menu dropdown (clique no <code>···</code>).</p>
+      <div class="tip-box"><strong>Dica:</strong> A maioria dos jobs está na aba UE Tests.</div>
+    </div>
+  </div>
+
+  <div class="step-box">
+    <div class="step-header"><div class="step-num pc">03</div><div class="step-title">Conheça os jobs que você precisa verificar</div><div class="step-toggle">▼</div></div>
+    <div class="step-content">
+      <p>Verifique <strong>somente os do dia atual</strong>:</p>
+      <table class="jtable">
+        <tr><th>Job</th><th>Aba</th><th>O que checar</th></tr>
+        <tr><td>EditorPerf City Sample TSAN Tests</td><td>UE Tests</td><td>Todos os steps</td></tr>
+        <tr><td>Compilation Test - Win64, Mac</td><td>UE Tests</td><td>Todos os steps</td></tr>
+        <tr><td>Low Level</td><td>UE Tests</td><td>Todos os steps</td></tr>
+        <tr><td>Editor Tools Monolithics</td><td>UE Builds</td><td>Todos os steps</td></tr>
+        <tr><td>Scheduled QAGame Package and Test</td><td>UE Builds</td><td>Todos os steps</td></tr>
+        <tr><td>Lyra Test</td><td>UE Tests</td><td>Todos os steps</td></tr>
+        <tr><td>Scheduled Lyra Package and Test and Publish</td><td>UE Builds</td><td>Todos os steps</td></tr>
+        <tr><td>Engine Tests - Nightly Inc. - Win64</td><td>UE Tests</td><td><strong>Apenas:</strong> Compile, Package, Stage, Boot</td></tr>
+        <tr><td>Engine Tests - Nightly Inc. - Mac</td><td>UE Tests</td><td><strong>Apenas:</strong> Compile, Package, Stage, Boot</td></tr>
+        <tr><td>Engine Tests - Nightly Inc. - Linux</td><td>UE Tests</td><td><strong>Apenas:</strong> Compile, Package, Stage, Boot</td></tr>
+      </table>
+      <div class="warn-box"><strong>Atenção:</strong> Nos "Engine Tests - Nightly Incremental" só checa Compile, Package, Stage e Boot.</div>
+    </div>
+  </div>
+
+  <div class="step-box">
+    <div class="step-header"><div class="step-num pc">04</div><div class="step-title">Entenda o significado das cores dos tiles</div><div class="step-toggle">▼</div></div>
+    <div class="step-content">
+      <div class="color-legend">
+        <div class="color-item"><div class="cdot" style="background:var(--green)"></div> Tudo OK</div>
+        <div class="color-item"><div class="cdot" style="background:var(--yellow)"></div> Warning</div>
+        <div class="color-item"><div class="cdot" style="background:var(--red)"></div> Error</div>
+        <div class="color-item"><div class="cdot" style="background:var(--accent)"></div> Em execução</div>
+      </div>
+      <div class="tip-box"><strong>Dica:</strong> A maioria termina entre 13h-15h (CEST). Se demorar, escreva no <code>#buildfarm-support-ext</code>.</div>
+    </div>
+  </div>
+
+  <div class="phase-label analyze">Fase 2 — Analisar Erros e Warnings</div>
+
+  <div class="step-box">
+    <div class="step-header"><div class="step-num pa">05</div><div class="step-title">Abra cada erro/warning em nova aba</div><div class="step-toggle">▼</div></div>
+    <div class="step-content">
+      <p>Abaixo dos tiles, você verá <strong>pontos com nomes de steps</strong> com erros. Clique direito → abrir em nova aba.</p>
+    </div>
+  </div>
+
+  <div class="step-box">
+    <div class="step-header"><div class="step-num pa">06</div><div class="step-title">Verifique a aba Health do step</div><div class="step-toggle">▼</div></div>
+    <div class="step-content">
+      <ul class="cklist">
+        <li>O issue já tem ticket no Jira?</li>
+        <li>Se sim — confira se corresponde ao erro</li>
+        <li>Se não — prossiga</li>
+      </ul>
+      <div class="tip-box"><strong>Dica:</strong> A Health tab mostra o ciclo de vida do erro.</div>
+    </div>
+  </div>
+
+  <div class="step-box">
+    <div class="step-header"><div class="step-num pa">07</div><div class="step-title">Cheque o histórico (History tab)</div><div class="step-toggle">▼</div></div>
+    <div class="step-content">
+      <ul class="cklist">
+        <li>O erro é novo (só hoje)?</li>
+        <li>Já aconteceu antes?</li>
+        <li>É intermitente?</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="step-box">
+    <div class="step-header"><div class="step-num pa">08</div><div class="step-title">Decida se o erro precisa ser reportado</div><div class="step-toggle">▼</div></div>
+    <div class="step-content">
+      <p><strong>NÃO reportar:</strong></p>
+      <ul class="cklist">
+        <li>Logs sem caminhos de arquivo</li>
+        <li>"Device not found" ou problemas de rede</li>
+        <li>Problemas de hardware Epic</li>
+      </ul>
+      <p><strong>SIM reportar:</strong></p>
+      <ul class="cklist">
+        <li>Logs detalhados com caminhos</li>
+        <li>Callstacks completas</li>
+        <li>Erros novos</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="step-box">
+    <div class="step-header"><div class="step-num pa">09</div><div class="step-title">Antes de criar ticket, busque no Jira</div><div class="step-toggle">▼</div></div>
+    <div class="step-content">
+      <p><strong>Evite duplicatas!</strong></p>
+      <ul class="cklist">
+        <li>Busque por caminho do arquivo no erro</li>
+        <li>Busque pelo nome do issue na Health tab</li>
+        <li>Confira <code>#ue-cis-ext</code> e <code>#ue-build-health-ext</code></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="phase-label report">Fase 3 — Reportar no Slack e Jira</div>
+
+  <div class="step-box">
+    <div class="step-header"><div class="step-num pr">10</div><div class="step-title">Reporte ERRORS no Slack</div><div class="step-toggle">▼</div></div>
+    <div class="step-content">
+      <p>Canal: <code>#ue-build-health-ext</code></p>
+      <div class="slack-fmt">:bug-jira: //Fortnite/Main - [Step] - [Resumo do erro]</div>
+      <ul class="cklist">
+        <li>Cole o log e link do step na thread</li>
+        <li>Reaja com :bug:</li>
+      </ul>
+      <div class="danger-box"><strong>Importante:</strong> Comece com <code>:bug-jira:</code>.</div>
+    </div>
+  </div>
+
+  <div class="step-box">
+    <div class="step-header"><div class="step-num pr">11</div><div class="step-title">Reporte WARNINGS no Slack</div><div class="step-toggle">▼</div></div>
+    <div class="step-content">
+      <p>Canal: <code>#ue-cis-ext</code></p>
+      <div class="slack-fmt">[NEW] //Fortnite/Main - [Step] - [Resumo]</div>
+      <ul class="cklist">
+        <li>Cole log e link do step</li>
+        <li>Reaja com :automationbot: — cria bug automaticamente</li>
+      </ul>
+      <div class="warn-box"><strong>Atenção:</strong> Preencha o Jira rápido depois.</div>
+    </div>
+  </div>
+
+  <div class="step-box">
+    <div class="step-header"><div class="step-num pr">12</div><div class="step-title">Preencha o ticket no Jira</div><div class="step-toggle">▼</div></div>
+    <div class="step-content">
+      <p><strong>Summary:</strong> <code>&lt;Stream&gt; - &lt;Step&gt; - &lt;Resumo&gt;</code></p>
+      <p><strong>Description:</strong> use <code>/code</code> e cole a callstack.</p>
+      <table class="jtable">
+        <tr><th>Tipo</th><th>P</th><th>S</th><th>Labels</th></tr>
+        <tr><td>Blocker</td><td>P0</td><td>S0</td><td>CIS, BuildBlocker</td></tr>
+        <tr><td>Error</td><td>P0</td><td>S1</td><td>CIS</td></tr>
+        <tr><td>Warning</td><td>P1</td><td>S2</td><td>CIS, UECISWarning</td></tr>
+      </table>
+      <p><strong>Regression:</strong> sempre "Yes".</p>
+      <div class="tip-box"><strong>CL Range:</strong> Step → History → clique direito no CL → "Open CL Range".</div>
+      <div class="tip-box"><strong>Logs:</strong> Step → View Log → Download. Anexe no Slack ANTES de criar o bug.</div>
+    </div>
+  </div>
+
+  <div class="step-box">
+    <div class="step-header"><div class="step-num pr">13</div><div class="step-title">Vincule o issue no Horde</div><div class="step-toggle">▼</div></div>
+    <div class="step-content">
+      <ul class="cklist">
+        <li>Health tab → clique no issue → Jira → Link Issue</li>
+        <li>Se Unassigned → atribua a pessoa correta</li>
+      </ul>
+      <div class="tip-box"><strong>Assignee:</strong> busque no P4 quem alterou o arquivo por último.</div>
+    </div>
+  </div>
+
+  <div class="phase-label end">Fase 4 — Final do Dia (EOD)</div>
+
+  <div class="step-box">
+    <div class="step-header"><div class="step-num pe">14</div><div class="step-title">Envie o relatório EOD</div><div class="step-toggle">▼</div></div>
+    <div class="step-content">
+      <p>Canal: <code>#ue-build-health-summary-ext</code></p>
+      <div class="slack-fmt">//Fortnite/Main - Build Health - DD/MM/YYYY
+
+[X] Issue Logged Today In Jira
+[X] Open CIS //Fortnite/Main Warnings
+[X] Current Open Issues (Excluding Warnings)
+Build Blocking Issues:
+  • None</div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<script>
+(function(){
+
+// ═════════════════════════════════════════
+// CONFIG
+// ═════════════════════════════════════════
+const JOBS = [
+  { id:"j1", name:"EditorPerf City Sample TSAN Tests", tab:"UE Tests", scope:"All steps" },
+  { id:"j2", name:"Compilation Test - Win64, Mac", tab:"UE Tests", scope:"All steps" },
+  { id:"j3", name:"Low Level", tab:"UE Tests", scope:"All steps" },
+  { id:"j4", name:"Editor Tools Monolithics", tab:"UE Builds", scope:"All steps" },
+  { id:"j5", name:"Scheduled QAGame Package and Test", tab:"UE Builds", scope:"All steps" },
+  { id:"j6", name:"Lyra Test", tab:"UE Tests", scope:"All steps" },
+  { id:"j7", name:"Scheduled Lyra Package and Test and Publish", tab:"UE Builds", scope:"All steps" },
+  { id:"j8", name:"Engine Tests - Nightly Incremental - Win64", tab:"UE Tests", scope:"Compile, Package, Stage, Boot" },
+  { id:"j9", name:"Engine Tests - Nightly Incremental - Mac", tab:"UE Tests", scope:"Compile, Package, Stage, Boot" },
+  { id:"j10", name:"Engine Tests - Nightly Incremental - Linux", tab:"UE Tests", scope:"Compile, Package, Stage, Boot" },
+];
+
+const COLS = [
+  { id:"pending", label:"Pendente", icon:"○", color:"#8b949e" },
+  { id:"checking", label:"Verificando", icon:"◐", color:"#58a6ff" },
+  { id:"issue", label:"Issue Encontrado", icon:"⚠", color:"#d29922" },
+  { id:"reported", label:"Reportado", icon:"●", color:"#f85149" },
+  { id:"done", label:"OK / Concluído", icon:"✓", color:"#3fb950" },
+];
+
+const AVATARS = ["🟣","🔵","🟢","🟠","🔴","⚪"];
+const POLL_INTERVAL = 4000; // 4 segundos
+
+// ═════════════════════════════════════════
+// STATE
+// ═════════════════════════════════════════
+let backendUrl = localStorage.getItem("cis-backend-url") || "";
+let members = [];
+let cardsMap = {}; // jobId -> { column, assignee }
+let dragJobId = null;
+let pollTimer = null;
+let isLocalEdit = false; // trava polling durante edição local
+
+// ═════════════════════════════════════════
+// DATE & TABS
+// ═════════════════════════════════════════
+const now = new Date();
+document.getElementById("todayDate").textContent = now.toLocaleDateString("pt-BR",{weekday:"long",day:"numeric",month:"long"});
+
+document.querySelectorAll(".tab-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+    document.querySelectorAll(".panel").forEach(p => p.classList.remove("active"));
+    btn.classList.add("active");
+    document.getElementById("panel-" + btn.dataset.tab).classList.add("active");
+  });
+});
+
+// Guide accordion
+document.querySelectorAll(".step-box .step-header").forEach(h => {
+  h.addEventListener("click", () => h.parentElement.classList.toggle("open"));
+});
+
+let allExpanded = false;
+document.getElementById("expandAllBtn").addEventListener("click", function(){
+  allExpanded = !allExpanded;
+  document.querySelectorAll(".step-box").forEach(s => {
+    if (allExpanded) s.classList.add("open"); else s.classList.remove("open");
+  });
+  this.innerHTML = allExpanded ? "▲ Recolher tudo" : "▼ Expandir tudo";
+});
+
+document.querySelectorAll(".cklist li").forEach(li => {
+  li.addEventListener("click", e => { e.stopPropagation(); li.classList.toggle("checked"); });
+});
+
+// ═════════════════════════════════════════
+// SETUP MODAL
+// ═════════════════════════════════════════
+function showSetupModal() {
+  document.getElementById("setupModal").classList.remove("hidden");
+  document.getElementById("urlInput").value = backendUrl;
+  document.getElementById("urlInput").focus();
+}
+function hideSetupModal() {
+  document.getElementById("setupModal").classList.add("hidden");
+}
+
+document.getElementById("saveUrlBtn").addEventListener("click", () => {
+  const url = document.getElementById("urlInput").value.trim();
+  if (!url) return;
+  backendUrl = url;
+  localStorage.setItem("cis-backend-url", url);
+  hideSetupModal();
+  init();
+});
+document.getElementById("urlInput").addEventListener("keydown", e => {
+  if (e.key === "Enter") document.getElementById("saveUrlBtn").click();
+});
+
+// ═════════════════════════════════════════
+// SYNC STATUS
+// ═════════════════════════════════════════
+function setSyncStatus(status) {
+  const dot = document.getElementById("syncDot");
+  const text = document.getElementById("syncText");
+  dot.className = "sync-dot";
+  if (status === "syncing") { dot.classList.add("syncing"); text.textContent = "Sincronizando..."; }
+  else if (status === "error") { dot.classList.add("error"); text.textContent = "Erro de conexão"; }
+  else { text.textContent = "Conectado"; }
+}
+
+// ═════════════════════════════════════════
+// BACKEND CALLS
+// ═════════════════════════════════════════
+async function fetchState() {
+  if (!backendUrl) return;
+  try {
+    setSyncStatus("syncing");
+    const res = await fetch(backendUrl, { method: "GET", redirect: "follow" });
+    const data = await res.json();
+    if (data.ok) {
+      members = data.members || [];
+      cardsMap = {};
+      (data.cards || []).forEach(c => {
+        cardsMap[c.jobId] = { column: c.column || "pending", assignee: c.assignee || null };
+      });
+      // Garante que todos os jobs existam no map
+      JOBS.forEach(j => { if (!cardsMap[j.id]) cardsMap[j.id] = { column:"pending", assignee:null }; });
+      render();
+      setSyncStatus("ok");
+    } else {
+      setSyncStatus("error");
+    }
+  } catch (err) {
+    console.error("Erro ao buscar estado:", err);
+    setSyncStatus("error");
+  }
+}
+
+async function postAction(payload) {
+  if (!backendUrl) return;
+  isLocalEdit = true;
+  try {
+    setSyncStatus("syncing");
+    const res = await fetch(backendUrl, {
+      method: "POST",
+      redirect: "follow",
+      headers: { "Content-Type": "text/plain;charset=utf-8" }, // evita CORS preflight
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if (data.ok) {
+      members = data.members || [];
+      cardsMap = {};
+      (data.cards || []).forEach(c => {
+        cardsMap[c.jobId] = { column: c.column || "pending", assignee: c.assignee || null };
+      });
+      JOBS.forEach(j => { if (!cardsMap[j.id]) cardsMap[j.id] = { column:"pending", assignee:null }; });
+      render();
+      setSyncStatus("ok");
+    } else {
+      setSyncStatus("error");
+    }
+  } catch (err) {
+    console.error("Erro ao salvar:", err);
+    setSyncStatus("error");
+  } finally {
+    isLocalEdit = false;
+  }
+}
+
+// ═════════════════════════════════════════
+// POLLING
+// ═════════════════════════════════════════
+function startPolling() {
+  if (pollTimer) clearInterval(pollTimer);
+  pollTimer = setInterval(() => { if (!isLocalEdit) fetchState(); }, POLL_INTERVAL);
+}
+
+// ═════════════════════════════════════════
+// ACTIONS
+// ═════════════════════════════════════════
+function moveCard(jobId, column) {
+  // Optimistic update
+  cardsMap[jobId] = { ...cardsMap[jobId], column };
+  render();
+  postAction({ action: "moveCard", jobId, column });
+}
+
+function assignCard(jobId, memberId) {
+  cardsMap[jobId] = { ...cardsMap[jobId], assignee: memberId };
+  render();
+  postAction({ action: "assignCard", jobId, assignee: memberId });
+}
+
+function addMember() {
+  const inp = document.getElementById("newMemberInput");
+  const name = inp.value.trim();
+  if (!name) return;
+  const member = {
+    id: Date.now().toString(),
+    name,
+    avatar: AVATARS[members.length % AVATARS.length]
+  };
+  inp.value = "";
+  members.push(member);
+  render();
+  postAction({ action: "addMember", member });
+}
+
+function removeMember(id) {
+  members = members.filter(m => m.id !== id);
+  Object.keys(cardsMap).forEach(k => { if (cardsMap[k].assignee === id) cardsMap[k].assignee = null; });
+  render();
+  postAction({ action: "removeMember", memberId: id });
+}
+
+function resetDay() {
+  JOBS.forEach(j => { cardsMap[j.id] = { column:"pending", assignee:null }; });
+  render();
+  postAction({ action: "resetDay" });
+}
+
+function getMember(id) { return members.find(m => m.id === id); }
+
+// ═════════════════════════════════════════
+// SETTINGS DROPDOWN
+// ═════════════════════════════════════════
+const gearBtn = document.getElementById("gearBtn");
+const settingsDrop = document.getElementById("settingsDrop");
+gearBtn.addEventListener("click", e => { e.stopPropagation(); settingsDrop.classList.toggle("open"); });
+document.addEventListener("click", e => {
+  if (!settingsDrop.contains(e.target) && e.target !== gearBtn) settingsDrop.classList.remove("open");
+});
+
+document.getElementById("addMemberBtn").addEventListener("click", addMember);
+document.getElementById("newMemberInput").addEventListener("keydown", e => { if (e.key === "Enter") addMember(); });
+document.getElementById("resetBtn").addEventListener("click", () => {
+  if (confirm("Voltar todos os cards para 'Pendente'?")) resetDay();
+});
+document.getElementById("changeUrlBtn").addEventListener("click", () => {
+  settingsDrop.classList.remove("open");
+  showSetupModal();
+});
+
+// ═════════════════════════════════════════
+// RENDER
+// ═════════════════════════════════════════
+function render() {
+  // Pills
+  document.getElementById("membersPills").innerHTML = members.map(m =>
+    `<span class="member-pill"><span style="font-size:13px">${m.avatar}</span> ${escapeHtml(m.name)}</span>`
+  ).join("");
+
+  // Settings members
+  const smEl = document.getElementById("settingsMembers");
+  smEl.innerHTML = members.map(m =>
+    `<div class="settings-member-row">
+      <span><span>${m.avatar}</span> ${escapeHtml(m.name)}</span>
+      <button class="remove-btn" data-mid="${m.id}">✕</button>
+    </div>`
+  ).join("");
+  smEl.querySelectorAll(".remove-btn").forEach(b => {
+    b.addEventListener("click", e => { e.stopPropagation(); removeMember(b.dataset.mid); });
+  });
+
+  // Columns
+  const colsEl = document.getElementById("kanbanColumns");
+  colsEl.innerHTML = "";
+
+  COLS.forEach(col => {
+    const colJobs = JOBS.filter(j => cardsMap[j.id]?.column === col.id);
+
+    const colDiv = document.createElement("div");
+    colDiv.className = "kanban-col";
+    colDiv.dataset.col = col.id;
+
+    colDiv.addEventListener("dragover", e => { e.preventDefault(); colDiv.classList.add("drag-over"); });
+    colDiv.addEventListener("dragleave", () => colDiv.classList.remove("drag-over"));
+    colDiv.addEventListener("drop", e => {
+      e.preventDefault();
+      colDiv.classList.remove("drag-over");
+      if (dragJobId) moveCard(dragJobId, col.id);
+    });
+
+    const hdr = document.createElement("div");
+    hdr.className = "col-header";
+    hdr.style.borderBottomColor = col.color + "22";
+    hdr.innerHTML = `
+      <div class="col-header-left">
+        <span class="col-icon" style="color:${col.color}">${col.icon}</span>
+        <span class="col-label" style="color:${col.color}">${col.label}</span>
+      </div>
+      <span class="col-count">${colJobs.length}</span>
+    `;
+    colDiv.appendChild(hdr);
+
+    const cardsArea = document.createElement("div");
+    cardsArea.className = "col-cards";
+
+    if (colJobs.length === 0) {
+      cardsArea.innerHTML = `<div class="col-empty">Vazio</div>`;
+    } else {
+      colJobs.forEach(job => {
+        const c = cardsMap[job.id];
+        const assignee = c.assignee ? getMember(c.assignee) : null;
+
+        const card = document.createElement("div");
+        card.className = "card";
+        card.draggable = true;
+        card.addEventListener("dragstart", e => { dragJobId = job.id; card.classList.add("dragging"); e.dataTransfer.effectAllowed = "move"; });
+        card.addEventListener("dragend", () => { dragJobId = null; card.classList.remove("dragging"); });
+
+        const tagClass = job.tab === "UE Tests" ? "tag-tests" : "tag-builds";
+        const scopeTag = job.scope !== "All steps" ? `<span class="tag tag-scope">Scope</span>` : "";
+        const assigneeLabel = assignee
+          ? `<span style="font-size:12px">${assignee.avatar}</span> ${escapeHtml(assignee.name)}`
+          : `<span style="font-size:11px">+ Atribuir</span>`;
+
+        card.innerHTML = `
+          <div class="card-title">${escapeHtml(job.name)}</div>
+          <div class="card-footer">
+            <div class="card-tags"><span class="tag ${tagClass}">${job.tab}</span>${scopeTag}</div>
+            <button class="assignee-btn ${assignee ? 'has-person' : ''}" data-job="${job.id}">
+              ${assigneeLabel}
+              <div class="assignee-drop" data-adrop="${job.id}"></div>
+            </button>
+          </div>
+        `;
+
+        const aBtn = card.querySelector(".assignee-btn");
+        aBtn.addEventListener("click", e => {
+          e.stopPropagation();
+          const drop = card.querySelector(".assignee-drop");
+          const isOpen = drop.classList.contains("open");
+          document.querySelectorAll(".assignee-drop.open").forEach(d => d.classList.remove("open"));
+
+          if (!isOpen) {
+            let html = `<div class="assignee-opt" data-assign-to=""><span style="font-size:12px">—</span> Ninguém</div>`;
+            members.forEach(m => {
+              const sel = c.assignee === m.id ? "selected" : "";
+              html += `<div class="assignee-opt ${sel}" data-assign-to="${m.id}">
+                <span style="font-size:12px">${m.avatar}</span> ${escapeHtml(m.name)}
+              </div>`;
+            });
+            drop.innerHTML = html;
+            drop.classList.add("open");
+            drop.querySelectorAll(".assignee-opt").forEach(opt => {
+              opt.addEventListener("click", ev => {
+                ev.stopPropagation();
+                const mid = opt.dataset.assignTo || null;
+                assignCard(job.id, mid);
+              });
+            });
+          }
+        });
+
+        cardsArea.appendChild(card);
+      });
+    }
+
+    colDiv.appendChild(cardsArea);
+    colsEl.appendChild(colDiv);
+  });
+}
+
+document.addEventListener("click", () => {
+  document.querySelectorAll(".assignee-drop.open").forEach(d => d.classList.remove("open"));
+});
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+
+// ═════════════════════════════════════════
+// INIT
+// ═════════════════════════════════════════
+async function init() {
+  // Inicializa cardsMap com jobs vazios
+  JOBS.forEach(j => { cardsMap[j.id] = { column:"pending", assignee:null }; });
+  render();
+  await fetchState();
+  startPolling();
+}
+
+if (!backendUrl) {
+  showSetupModal();
+  // Render inicial vazio enquanto espera URL
+  JOBS.forEach(j => { cardsMap[j.id] = { column:"pending", assignee:null }; });
+  render();
+} else {
+  init();
+}
+
+})();
+</script>
+</body>
+</html>
