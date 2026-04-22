@@ -1,18 +1,58 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" data-theme="dark">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CIS Horde — Fortnite/Main</title>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg: #0a0e14; --bg2: #0d1117; --surface: #12161e; --surface2: #161b22;
-    --surface-hover: #1c2333; --border: #1a1f2e; --border2: #30363d;
-    --text: #e6edf3; --text-dim: #8b949e; --text-muted: #484f58;
-    --accent: #58a6ff; --green: #3fb950; --yellow: #d29922;
-    --red: #f85149; --purple: #bc8cff; --orange: #db6d28;
+  /* ─── TEMA ESCURO (padrão) ─── */
+  :root, [data-theme="dark"] {
+    --bg: #0a0e14;
+    --bg2: #0d1117;
+    --surface: #12161e;
+    --surface2: #161b22;
+    --surface-hover: #1c2333;
+    --border: #1a1f2e;
+    --border2: #30363d;
+    --text: #e6edf3;
+    --text-dim: #8b949e;
+    --text-muted: #484f58;
+    --accent: #58a6ff;
+    --green: #3fb950;
+    --yellow: #d29922;
+    --red: #f85149;
+    --purple: #bc8cff;
+    --orange: #db6d28;
+    --reported: #8b6f5a;        /* dessaturado em vez de vermelho puro */
+    --note-bg: rgba(255,255,255,0.03);
+    --scrollbar-thumb: #30363d;
+    --scrollbar-track: transparent;
   }
+
+  /* ─── TEMA CLARO ─── */
+  [data-theme="light"] {
+    --bg: #fafbfc;
+    --bg2: #ffffff;
+    --surface: #ffffff;
+    --surface2: #f6f8fa;
+    --surface-hover: #eef2f6;
+    --border: #e1e4e8;
+    --border2: #d0d7de;
+    --text: #1f2328;
+    --text-dim: #656d76;
+    --text-muted: #8c959f;
+    --accent: #0969da;
+    --green: #1a7f37;
+    --yellow: #9a6700;
+    --red: #cf222e;
+    --purple: #8250df;
+    --orange: #bc4c00;
+    --reported: #a1887f;
+    --note-bg: rgba(0,0,0,0.03);
+    --scrollbar-thumb: #d0d7de;
+  }
+
   * { margin:0; padding:0; box-sizing:border-box; }
   html { height: 100%; }
   body {
@@ -20,19 +60,27 @@
     font-family: 'Outfit', -apple-system, sans-serif;
     line-height: 1.6; min-height: 100vh;
     display: flex; flex-direction: column;
+    transition: background 0.2s, color 0.2s;
   }
-  button { font-family: inherit; }
+  button, input, textarea { font-family: inherit; }
 
+  /* Scrollbar refinada */
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: var(--scrollbar-track); }
+  ::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 5px; }
+
+  /* ─── SETUP MODAL ─── */
   .setup-modal {
     position: fixed; inset: 0; background: rgba(5,8,12,0.95);
     z-index: 1000; display: flex; align-items: center; justify-content: center;
     backdrop-filter: blur(8px); padding: 20px;
   }
+  [data-theme="light"] .setup-modal { background: rgba(255,255,255,0.92); }
   .setup-modal.hidden { display: none; }
   .setup-box {
     background: var(--surface2); border: 1px solid var(--border2);
     border-radius: 14px; padding: 32px; max-width: 520px; width: 100%;
-    box-shadow: 0 24px 60px rgba(0,0,0,0.6);
+    box-shadow: 0 24px 60px rgba(0,0,0,0.3);
   }
   .setup-box h2 {
     font-family: 'IBM Plex Mono', monospace; font-size: 18px;
@@ -48,29 +96,95 @@
   .setup-box input:focus { border-color: var(--accent); }
   .setup-box button {
     width: 100%; background: var(--accent); border: none;
-    border-radius: 7px; padding: 11px; color: var(--bg);
+    border-radius: 7px; padding: 11px; color: #fff;
     font-size: 14px; font-weight: 700; cursor: pointer;
   }
-  .setup-box button:hover { background: #79b8ff; }
 
+  /* ─── IDENTIFY MODAL (quem é você?) ─── */
+  .identify-modal { z-index: 900; }
+  .identify-box { max-width: 440px; }
+  .identify-members {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 8px; margin: 16px 0;
+  }
+  .identify-btn {
+    background: var(--bg2); border: 1px solid var(--border2);
+    border-radius: 8px; padding: 12px; cursor: pointer;
+    display: flex; align-items: center; gap: 10px;
+    color: var(--text); font-size: 13px;
+    transition: all 0.15s;
+  }
+  .identify-btn:hover { border-color: var(--accent); background: var(--surface-hover); }
+  .identify-btn.new {
+    background: transparent; border-style: dashed;
+    color: var(--text-dim); justify-content: center;
+  }
+
+  /* ─── EOD MODAL ─── */
+  .eod-modal { z-index: 950; }
+  .eod-box { max-width: 600px; }
+  .eod-stats {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 8px; margin: 16px 0;
+  }
+  .eod-stat {
+    background: var(--bg2); border: 1px solid var(--border2);
+    border-radius: 8px; padding: 12px; text-align: center;
+  }
+  .eod-stat-num {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 22px; font-weight: 700; color: var(--accent);
+  }
+  .eod-stat-label {
+    font-size: 11px; color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px;
+  }
+  .eod-preview {
+    background: var(--bg2); border: 1px solid var(--border2);
+    border-radius: 7px; padding: 14px;
+    font-family: 'IBM Plex Mono', monospace; font-size: 12px;
+    line-height: 1.8; color: var(--text); white-space: pre-wrap;
+    max-height: 260px; overflow-y: auto;
+  }
+  .eod-actions { display: flex; gap: 8px; margin-top: 14px; }
+  .eod-actions button { flex: 1; padding: 10px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; border: 1px solid transparent; }
+  .eod-copy { background: var(--accent); color: #fff; }
+  .eod-close { background: transparent; color: var(--text-dim); border-color: var(--border2); }
+  .eod-close:hover { background: var(--surface-hover); }
+  .eod-copy.copied { background: var(--green); }
+
+  /* ─── TOP BAR ─── */
   .topbar {
     display: flex; align-items: center; justify-content: space-between;
-    padding: 0 24px; height: 52px;
+    padding: 0 24px; height: 56px;
     border-bottom: 1px solid var(--border);
-    background: var(--bg2); flex-shrink: 0;
+    background: var(--bg2); flex-shrink: 0; gap: 12px;
   }
-  .topbar-left { display: flex; align-items: center; gap: 10px; }
+  .topbar-left { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
   .topbar-logo {
     font-family: 'IBM Plex Mono', monospace;
     font-size: 11px; font-weight: 700; color: var(--green);
-    background: rgba(63,185,80,0.1); padding: 3px 8px; border-radius: 4px;
+    background: rgba(63,185,80,0.12); padding: 3px 8px; border-radius: 4px;
     letter-spacing: 1px;
   }
   .topbar-title { font-family: 'Outfit', sans-serif; font-size: 17px; font-weight: 700; color: var(--text); }
-  .topbar-date {
+  .date-pill {
     font-family: 'IBM Plex Mono', monospace;
-    font-size: 11px; color: var(--text-muted); margin-left: 8px;
+    font-size: 11px; color: var(--text-dim);
+    background: var(--surface2); border: 1px solid var(--border);
+    padding: 4px 10px; border-radius: 12px; margin-left: 4px;
   }
+  .topbar-right { display: flex; align-items: center; gap: 10px; }
+  .mini-stats {
+    display: flex; gap: 6px; font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+  }
+  .mini-stat {
+    display: flex; align-items: center; gap: 4px;
+    padding: 3px 8px; border-radius: 10px;
+    background: var(--surface2); border: 1px solid var(--border);
+  }
+  .mini-stat-dot { width: 6px; height: 6px; border-radius: 50%; }
   .sync-badge {
     display: flex; align-items: center; gap: 6px;
     font-family: 'IBM Plex Mono', monospace; font-size: 11px;
@@ -84,6 +198,18 @@
   .sync-dot.error { background: var(--red); animation: none; }
   @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
 
+  .icon-btn {
+    background: transparent; border: 1px solid var(--border2);
+    border-radius: 8px; padding: 6px 10px;
+    color: var(--text-dim); cursor: pointer; font-size: 14px;
+    display: flex; align-items: center; gap: 5px;
+    transition: all 0.15s;
+  }
+  .icon-btn:hover { background: var(--surface2); color: var(--text); }
+  .icon-btn.eod { color: var(--accent); border-color: rgba(88,166,255,0.3); }
+  .icon-btn.eod:hover { background: rgba(88,166,255,0.1); }
+
+  /* ─── TABS ─── */
   .tabs {
     display: flex; padding: 0 24px;
     background: var(--bg2); border-bottom: 1px solid var(--border);
@@ -97,35 +223,47 @@
   }
   .tab-btn:hover { color: var(--text-dim); }
   .tab-btn.active { color: var(--text); border-bottom-color: var(--accent); }
-  .tab-btn .tab-icon { font-size: 15px; }
 
   .panel { display: none; flex: 1; overflow: hidden; }
   .panel.active { display: flex; flex-direction: column; }
 
+  /* ─── KANBAN TOOLBAR ─── */
   .kanban-toolbar {
     display: flex; align-items: center; justify-content: space-between;
-    padding: 12px 24px; border-bottom: 1px solid var(--border);
+    padding: 10px 24px; border-bottom: 1px solid var(--border);
     background: var(--bg); flex-wrap: wrap; gap: 8px;
   }
-  .members-row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+  .members-row { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
   .member-pill {
-    display: inline-flex; align-items: center; gap: 5px;
+    display: inline-flex; align-items: center; gap: 6px;
     background: var(--surface2); border: 1px solid var(--border2);
-    border-radius: 20px; padding: 3px 10px 3px 6px;
+    border-radius: 20px; padding: 3px 10px 3px 3px;
     font-size: 12px; color: var(--text-dim);
+    cursor: pointer; transition: all 0.15s;
   }
-  .gear-btn {
-    background: transparent; border: 1px solid var(--border2);
-    border-radius: 8px; padding: 5px 10px;
-    color: var(--text-muted); cursor: pointer; font-size: 15px; position: relative;
+  .member-pill:hover { border-color: var(--accent); }
+  .member-pill.filtered {
+    background: var(--accent); color: #fff; border-color: var(--accent);
   }
-  .gear-btn:hover { background: var(--surface2); }
+  .member-pill.me { border-color: rgba(88,166,255,0.4); }
 
+  /* Avatar circular com iniciais */
+  .avatar {
+    width: 22px; height: 22px; border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px; font-weight: 700; color: #fff;
+    flex-shrink: 0; user-select: none;
+  }
+  .avatar.lg { width: 28px; height: 28px; font-size: 11px; }
+  .avatar.sm { width: 18px; height: 18px; font-size: 9px; }
+
+  /* ─── SETTINGS DROP ─── */
   .settings-drop {
     display: none; position: absolute; top: calc(100% + 8px); right: 0;
     background: var(--surface2); border: 1px solid var(--border2);
-    border-radius: 12px; padding: 16px; width: 300px;
-    z-index: 200; box-shadow: 0 16px 48px rgba(0,0,0,0.6);
+    border-radius: 12px; padding: 16px; width: 310px;
+    z-index: 200; box-shadow: 0 16px 48px rgba(0,0,0,0.3);
   }
   .settings-drop.open { display: block; }
   .settings-label {
@@ -136,7 +274,14 @@
   .settings-member-row {
     display: flex; align-items: center; justify-content: space-between; padding: 5px 0;
   }
-  .settings-member-row span { font-size: 13px; color: var(--text-dim); display: flex; align-items: center; gap: 6px; }
+  .settings-member-row > span {
+    font-size: 13px; color: var(--text); display: flex; align-items: center; gap: 8px;
+  }
+  .me-tag {
+    font-size: 9px; font-family: 'IBM Plex Mono', monospace;
+    background: var(--accent); color: #fff; padding: 1px 5px; border-radius: 3px;
+    letter-spacing: 0.5px;
+  }
   .remove-btn {
     background: none; border: none; color: var(--red);
     cursor: pointer; font-size: 14px; padding: 2px 6px; border-radius: 4px;
@@ -145,38 +290,38 @@
   .add-row input {
     flex: 1; background: var(--bg2); border: 1px solid var(--border2);
     border-radius: 6px; padding: 6px 10px; color: var(--text);
-    font-size: 13px; outline: none; font-family: inherit;
+    font-size: 13px; outline: none;
   }
   .add-row input:focus { border-color: var(--accent); }
   .add-btn {
-    background: #238636; border: none; border-radius: 6px;
+    background: var(--green); border: none; border-radius: 6px;
     padding: 6px 14px; color: #fff; font-size: 14px;
     cursor: pointer; font-weight: 700;
   }
-  .reset-btn, .url-btn {
+  .settings-divider { border-top: 1px solid var(--border); margin: 14px 0 10px; }
+  .settings-btn {
     width: 100%; padding: 8px; border-radius: 6px;
     font-size: 12px; cursor: pointer;
     font-family: 'IBM Plex Mono', monospace;
-    margin-top: 8px;
+    margin-top: 6px; border: 1px solid;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
   }
-  .reset-btn {
-    background: rgba(248,81,73,0.08); border: 1px solid rgba(248,81,73,0.2); color: var(--red);
-  }
-  .reset-btn:hover { background: rgba(248,81,73,0.14); }
-  .url-btn {
-    background: rgba(88,166,255,0.08); border: 1px solid rgba(88,166,255,0.2); color: var(--accent);
-  }
-  .url-btn:hover { background: rgba(88,166,255,0.14); }
+  .settings-btn.danger { background: rgba(248,81,73,0.08); border-color: rgba(248,81,73,0.2); color: var(--red); }
+  .settings-btn.danger:hover { background: rgba(248,81,73,0.14); }
+  .settings-btn.info { background: rgba(88,166,255,0.08); border-color: rgba(88,166,255,0.2); color: var(--accent); }
+  .settings-btn.info:hover { background: rgba(88,166,255,0.14); }
 
+  /* ─── COLUMNS ─── */
   .kanban-columns { display: flex; flex: 1; overflow-x: auto; overflow-y: auto; }
   .kanban-col {
-    flex: 1; min-width: 195px;
+    flex: 1; min-width: 210px;
     border-right: 1px solid var(--border);
     display: flex; flex-direction: column;
     transition: background 0.12s;
   }
   .kanban-col:last-child { border-right: none; }
-  .kanban-col.drag-over { background: rgba(88,166,255,0.03); }
+  .kanban-col.drag-over { background: rgba(88,166,255,0.04); }
+  [data-theme="light"] .kanban-col.drag-over { background: rgba(9,105,218,0.04); }
   .col-header {
     padding: 14px 14px 10px;
     border-bottom: 2px solid transparent;
@@ -204,50 +349,125 @@
     border: 1px dashed var(--border); border-radius: 8px; margin-top: 4px;
   }
 
+  /* Coluna "Reportado" com visual dessaturado (estado de saída) */
+  .kanban-col[data-col="reported"] .card {
+    opacity: 0.82;
+  }
+  .kanban-col[data-col="reported"] .card:hover { opacity: 1; }
+  .kanban-col[data-col="done"] .card {
+    opacity: 0.75;
+  }
+  .kanban-col[data-col="done"] .card:hover { opacity: 1; }
+
+  /* ─── CARD ─── */
   .card {
     background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: 8px; padding: 11px 13px;
-    margin-bottom: 5px; cursor: grab;
-    transition: border-color 0.1s, background 0.1s;
+    border-radius: 8px; padding: 10px 12px;
+    margin-bottom: 6px; cursor: grab;
+    transition: border-color 0.12s, background 0.12s, opacity 0.12s;
+    position: relative;
   }
-  .card:hover { border-color: var(--border2); background: #151b25; }
-  .card.dragging { opacity: 0.4; }
-  .card-title { font-size: 13px; font-weight: 500; color: var(--text); margin-bottom: 6px; line-height: 1.35; }
-  .card-footer { display: flex; align-items: center; justify-content: space-between; gap: 6px; flex-wrap: wrap; }
-  .card-tags { display: flex; gap: 4px; align-items: center; }
+  .card:hover { border-color: var(--border2); }
+  [data-theme="dark"] .card:hover { background: #151b25; }
+  [data-theme="light"] .card:hover { background: var(--surface2); }
+  .card.dragging { opacity: 0.4; cursor: grabbing; }
+  .card.filtered-out { opacity: 0.2; pointer-events: none; }
+  .card.stuck {
+    border-color: rgba(210,153,34,0.4);
+    box-shadow: 0 0 0 1px rgba(210,153,34,0.15);
+  }
+  .card-head {
+    display: flex; align-items: flex-start; justify-content: space-between;
+    gap: 8px; margin-bottom: 5px;
+  }
+  .card-title {
+    font-size: 13px; font-weight: 500; color: var(--text);
+    line-height: 1.35; flex: 1;
+  }
+  .card-ext-link {
+    color: var(--text-muted); text-decoration: none;
+    font-size: 13px; opacity: 0.5;
+    transition: opacity 0.15s;
+  }
+  .card:hover .card-ext-link { opacity: 1; }
+  .card-ext-link:hover { color: var(--accent); }
+  .card-footer { display: flex; align-items: center; justify-content: space-between; gap: 6px; flex-wrap: wrap; margin-top: 4px; }
+  .card-tags { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
   .tag {
     font-size: 10px; font-family: 'IBM Plex Mono', monospace;
     padding: 2px 6px; border-radius: 3px;
   }
-  .tag-tests { color: var(--accent); background: rgba(88,166,255,0.1); }
-  .tag-builds { color: var(--purple); background: rgba(188,140,255,0.1); }
-  .tag-scope { color: var(--yellow); background: rgba(210,153,34,0.1); }
+  .tag-tests { color: var(--accent); background: rgba(88,166,255,0.12); }
+  .tag-builds { color: var(--purple); background: rgba(188,140,255,0.12); }
+  .tag-scope { color: var(--yellow); background: rgba(210,153,34,0.12); }
+  [data-theme="light"] .tag-tests { background: rgba(9,105,218,0.1); }
+  [data-theme="light"] .tag-builds { background: rgba(130,80,223,0.1); }
+  [data-theme="light"] .tag-scope { background: rgba(154,103,0,0.1); }
+
+  .card-meta {
+    display: flex; align-items: center; gap: 5px;
+    font-size: 10px; font-family: 'IBM Plex Mono', monospace;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+  .card-meta-time { opacity: 0.8; }
 
   .assignee-btn {
     background: none; border: 1px solid transparent;
-    border-radius: 12px; padding: 2px 8px;
+    border-radius: 12px; padding: 2px 8px 2px 3px;
     cursor: pointer; font-size: 12px; color: var(--text-muted);
-    display: flex; align-items: center; gap: 4px; font-family: inherit;
+    display: flex; align-items: center; gap: 5px;
     position: relative;
   }
   .assignee-btn:hover { border-color: var(--border2); }
-  .assignee-btn.has-person { color: var(--text-dim); }
+  .assignee-btn.has-person { color: var(--text); padding-left: 3px; }
+  .assignee-btn.no-person { padding: 2px 8px; }
   .assignee-drop {
     display: none; position: absolute; bottom: calc(100% + 4px); right: 0;
     background: var(--surface-hover); border: 1px solid var(--border2);
     border-radius: 8px; padding: 5px; z-index: 60;
-    min-width: 130px; box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+    min-width: 150px; box-shadow: 0 8px 24px rgba(0,0,0,0.3);
   }
   .assignee-drop.open { display: block; }
   .assignee-opt {
     padding: 5px 8px; font-size: 12px; color: var(--text-dim);
     cursor: pointer; border-radius: 4px;
-    display: flex; align-items: center; gap: 6px;
+    display: flex; align-items: center; gap: 7px;
   }
-  .assignee-opt:hover { background: #252d3a; }
-  .assignee-opt.selected { background: rgba(88,166,255,0.1); }
+  .assignee-opt:hover { background: var(--surface2); color: var(--text); }
+  .assignee-opt.selected { background: rgba(88,166,255,0.12); color: var(--text); }
 
+  /* ─── NOTA DO CARD ─── */
+  .card-note {
+    margin-top: 6px;
+    background: var(--note-bg);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 6px 8px;
+    font-size: 11px;
+    color: var(--text-dim);
+    font-family: 'IBM Plex Mono', monospace;
+    line-height: 1.4;
+    word-break: break-word;
+    position: relative;
+  }
+  .card-note a { color: var(--accent); text-decoration: none; }
+  .card-note a:hover { text-decoration: underline; }
+  .card-note.empty {
+    color: var(--text-muted); font-style: italic; opacity: 0.6;
+    cursor: text;
+  }
+  .card-note-input {
+    width: 100%; min-height: 32px;
+    background: var(--surface); border: 1px solid var(--accent);
+    border-radius: 5px; padding: 6px 8px;
+    font-size: 11px; color: var(--text);
+    font-family: 'IBM Plex Mono', monospace; line-height: 1.4;
+    outline: none; resize: vertical;
+  }
+
+  /* ─── GUIDE PANEL (mantém igual) ─── */
   .guide-panel { overflow-y: auto; }
   .guide-inner { max-width: 900px; margin: 0 auto; padding: 40px 24px 80px; }
   .guide-hero {
@@ -256,6 +476,9 @@
     background: linear-gradient(135deg, rgba(88,166,255,0.07) 0%, rgba(188,140,255,0.07) 100%);
     border: 1px solid var(--border); border-radius: 14px;
     position: relative; overflow: hidden;
+  }
+  [data-theme="light"] .guide-hero {
+    background: linear-gradient(135deg, rgba(9,105,218,0.05) 0%, rgba(130,80,223,0.05) 100%);
   }
   .guide-hero::before {
     content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
@@ -273,7 +496,7 @@
     padding: 7px 15px; background: rgba(88,166,255,0.1);
     border: 1px solid rgba(88,166,255,0.2); border-radius: 8px;
     color: var(--accent); font-size: 13px; cursor: pointer;
-    margin-bottom: 20px; font-family: inherit; transition: all 0.15s;
+    margin-bottom: 20px; transition: all 0.15s;
   }
   .expand-all-btn:hover { background: rgba(88,166,255,0.16); }
 
@@ -298,7 +521,7 @@
   .step-header { display: flex; align-items: center; gap: 14px; padding: 16px 20px; cursor: pointer; user-select: none; }
   .step-num {
     font-family: 'IBM Plex Mono', monospace;
-    font-size: 12px; font-weight: 700; color: var(--bg);
+    font-size: 12px; font-weight: 700; color: #fff;
     width: 30px; height: 30px; border-radius: 7px;
     display: flex; align-items: center; justify-content: center; flex-shrink: 0;
   }
@@ -328,13 +551,13 @@
   .color-legend { display: grid; grid-template-columns: repeat(2,1fr); gap: 7px; margin: 14px 0; }
   .color-item {
     display: flex; align-items: center; gap: 9px;
-    padding: 7px 11px; background: rgba(255,255,255,0.02); border-radius: 7px; font-size: 13px;
+    padding: 7px 11px; background: var(--note-bg); border-radius: 7px; font-size: 13px;
   }
   .cdot { width: 13px; height: 13px; border-radius: 3px; flex-shrink: 0; }
 
   .nav-path {
     font-family: 'IBM Plex Mono', monospace; font-size: 13px;
-    color: var(--text-muted); background: rgba(255,255,255,0.03);
+    color: var(--text-muted); background: var(--note-bg);
     padding: 9px 15px; border-radius: 7px; margin: 10px 0;
     display: flex; align-items: center; gap: 7px;
   }
@@ -343,16 +566,15 @@
 
   .jtable { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 12px; }
   .jtable th {
-    text-align: left; padding: 9px 10px; background: rgba(255,255,255,0.03);
+    text-align: left; padding: 9px 10px; background: var(--note-bg);
     color: var(--accent); font-family: 'IBM Plex Mono', monospace;
     font-size: 11px; font-weight: 600; border-bottom: 1px solid var(--border);
   }
-  .jtable td { padding: 7px 10px; border-bottom: 1px solid rgba(26,31,46,0.6); font-size: 12px; }
-  .jtable tr:hover td { background: rgba(255,255,255,0.015); }
+  .jtable td { padding: 7px 10px; border-bottom: 1px solid var(--border); font-size: 12px; }
 
   code {
     font-family: 'IBM Plex Mono', monospace;
-    background: rgba(255,255,255,0.05); padding: 2px 5px;
+    background: var(--note-bg); padding: 2px 5px;
     border-radius: 3px; font-size: 12px; color: var(--accent);
   }
 
@@ -370,57 +592,107 @@
   .cklist li.checked { text-decoration: line-through; opacity: 0.5; }
 
   .slack-fmt {
-    background: rgba(255,255,255,0.03); border: 1px solid var(--border);
+    background: var(--note-bg); border: 1px solid var(--border);
     border-radius: 7px; padding: 14px;
     font-family: 'IBM Plex Mono', monospace; font-size: 12px;
     line-height: 1.8; color: var(--text); white-space: pre-wrap;
   }
 
-  @media (max-width: 700px) {
-    .topbar { padding: 0 14px; }
+  /* Toast */
+  .toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px);
+    background: var(--text); color: var(--bg);
+    padding: 10px 18px; border-radius: 24px;
+    font-size: 13px; font-weight: 500;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    opacity: 0; transition: all 0.25s ease;
+    z-index: 2000; pointer-events: none;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  @media (max-width: 800px) {
+    .topbar { padding: 0 14px; height: auto; min-height: 52px; flex-wrap: wrap; padding: 10px 14px; }
+    .topbar-title { font-size: 15px; }
+    .date-pill { display: none; }
+    .mini-stats { display: none; }
     .tabs { padding: 0 14px; }
     .tab-btn { padding: 9px 12px; font-size: 12px; }
     .kanban-toolbar { padding: 10px 14px; }
     .guide-inner { padding: 24px 14px 60px; }
     .step-content { padding-left: 20px; }
     .color-legend { grid-template-columns: 1fr; }
-    .topbar-date { display: none; }
+    .eod-stats { grid-template-columns: repeat(2, 1fr); }
   }
 </style>
 </head>
 <body>
 
+<!-- Setup URL -->
 <div class="setup-modal hidden" id="setupModal">
   <div class="setup-box">
     <h2>// Configuração inicial</h2>
-    <p>Cole a URL do Web App publicado no Google Apps Script. Começa com <code>https://script.google.com/...</code></p>
+    <p>Cole a URL do Web App publicado no Google Apps Script.</p>
     <input type="text" id="urlInput" placeholder="https://script.google.com/..." />
     <button id="saveUrlBtn">Conectar</button>
   </div>
 </div>
 
+<!-- Identify (quem é você?) -->
+<div class="setup-modal identify-modal hidden" id="identifyModal">
+  <div class="setup-box identify-box">
+    <h2>// Quem é você?</h2>
+    <p>Identifique-se para que seu colega veja quem fez cada mudança.</p>
+    <div class="identify-members" id="identifyMembers"></div>
+    <div class="add-row">
+      <input id="identifyNewName" placeholder="Novo membro..." />
+      <button class="add-btn" id="identifyAddBtn">+</button>
+    </div>
+  </div>
+</div>
+
+<!-- EOD Modal -->
+<div class="setup-modal eod-modal hidden" id="eodModal">
+  <div class="setup-box eod-box">
+    <h2>// Resumo do dia</h2>
+    <p id="eodDate"></p>
+    <div class="eod-stats" id="eodStats"></div>
+    <div class="eod-preview" id="eodPreview"></div>
+    <div class="eod-actions">
+      <button class="eod-close" id="eodCloseBtn">Fechar</button>
+      <button class="eod-copy" id="eodCopyBtn">📋 Copiar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Top bar -->
 <div class="topbar">
   <div class="topbar-left">
     <span class="topbar-logo">CIS</span>
     <span class="topbar-title">Horde — Fortnite/Main</span>
-    <span class="topbar-date" id="todayDate"></span>
+    <span class="date-pill" id="datePill"></span>
   </div>
-  <div class="sync-badge">
-    <span class="sync-dot" id="syncDot"></span>
-    <span id="syncText">Conectado</span>
+  <div class="topbar-right">
+    <div class="mini-stats" id="miniStats"></div>
+    <button class="icon-btn eod" id="eodBtn" title="Resumo do dia (Shift+R)">📊 EOD</button>
+    <button class="icon-btn" id="themeBtn" title="Alternar tema (Shift+T)">🌙</button>
+    <div class="sync-badge">
+      <span class="sync-dot" id="syncDot"></span>
+      <span id="syncText">Conectado</span>
+    </div>
   </div>
 </div>
 
 <div class="tabs">
-  <button class="tab-btn active" data-tab="kanban"><span class="tab-icon">▦</span> Kanban</button>
-  <button class="tab-btn" data-tab="guide"><span class="tab-icon">📋</span> Passo a Passo</button>
+  <button class="tab-btn active" data-tab="kanban">▦ Kanban</button>
+  <button class="tab-btn" data-tab="guide">📋 Passo a Passo</button>
 </div>
 
+<!-- Kanban Panel -->
 <div class="panel active" id="panel-kanban">
   <div class="kanban-toolbar">
     <div class="members-row" id="membersPills"></div>
     <div style="position:relative;">
-      <button class="gear-btn" id="gearBtn">⚙</button>
+      <button class="icon-btn" id="gearBtn">⚙</button>
       <div class="settings-drop" id="settingsDrop">
         <div class="settings-label">Equipe</div>
         <div id="settingsMembers"></div>
@@ -428,14 +700,17 @@
           <input id="newMemberInput" placeholder="Nome..." />
           <button class="add-btn" id="addMemberBtn">+</button>
         </div>
-        <button class="reset-btn" id="resetBtn">↻ Reset do dia (volta tudo p/ Pendente)</button>
-        <button class="url-btn" id="changeUrlBtn">⚙ Trocar URL do backend</button>
+        <div class="settings-divider"></div>
+        <button class="settings-btn info" id="changeIdentityBtn">👤 Trocar identidade</button>
+        <button class="settings-btn danger" id="resetBtn">↻ Arquivar dia e resetar</button>
+        <button class="settings-btn info" id="changeUrlBtn">🔗 Trocar URL do backend</button>
       </div>
     </div>
   </div>
   <div class="kanban-columns" id="kanbanColumns"></div>
 </div>
 
+<!-- Guide Panel -->
 <div class="panel guide-panel" id="panel-guide">
 <div class="guide-inner">
 
@@ -451,80 +726,70 @@
   <div class="step-box">
     <div class="step-header"><div class="step-num pc">01</div><div class="step-title">Abra o Horde e navegue até Fortnite/Main</div><div class="step-toggle">▼</div></div>
     <div class="step-content">
-      <p>No menu superior do Horde:</p>
+      <p>No menu superior:</p>
       <div class="nav-path"><span>Fortnite</span><span class="sep">›</span><span>General</span><span class="sep">›</span><span>Main</span></div>
-      <p>Isso leva à lista de jobs do stream <strong>//Fortnite/Main</strong>.</p>
     </div>
   </div>
 
   <div class="step-box">
     <div class="step-header"><div class="step-num pc">02</div><div class="step-title">Identifique as abas "UE Tests" e "UE Builds"</div><div class="step-toggle">▼</div></div>
     <div class="step-content">
-      <p><strong>UE Tests</strong> — visível diretamente na barra.</p>
-      <p><strong>UE Builds</strong> — dentro do dropdown <code>···</code>.</p>
-      <div class="tip-box"><strong>Dica:</strong> A maioria dos jobs está na aba UE Tests.</div>
+      <p><strong>UE Tests</strong> — direto na barra. <strong>UE Builds</strong> — dentro do <code>···</code>.</p>
     </div>
   </div>
 
   <div class="step-box">
-    <div class="step-header"><div class="step-num pc">03</div><div class="step-title">Conheça os jobs que você precisa verificar</div><div class="step-toggle">▼</div></div>
+    <div class="step-header"><div class="step-num pc">03</div><div class="step-title">Jobs para verificar</div><div class="step-toggle">▼</div></div>
     <div class="step-content">
-      <p>Verifique <strong>somente os do dia atual</strong>:</p>
       <table class="jtable">
-        <tr><th>Job</th><th>Aba</th><th>O que checar</th></tr>
-        <tr><td>EditorPerf City Sample TSAN Tests</td><td>UE Tests</td><td>Todos os steps</td></tr>
-        <tr><td>Compilation Test - Win64, Mac</td><td>UE Tests</td><td>Todos os steps</td></tr>
-        <tr><td>Low Level</td><td>UE Tests</td><td>Todos os steps</td></tr>
-        <tr><td>Editor Tools Monolithics</td><td>UE Builds</td><td>Todos os steps</td></tr>
-        <tr><td>Scheduled QAGame Package and Test</td><td>UE Builds</td><td>Todos os steps</td></tr>
-        <tr><td>Lyra Test</td><td>UE Tests</td><td>Todos os steps</td></tr>
-        <tr><td>Scheduled Lyra Package and Test and Publish</td><td>UE Builds</td><td>Todos os steps</td></tr>
-        <tr><td>Engine Tests - Nightly Inc. - Win64</td><td>UE Tests</td><td><strong>Apenas:</strong> Compile, Package, Stage, Boot</td></tr>
-        <tr><td>Engine Tests - Nightly Inc. - Mac</td><td>UE Tests</td><td><strong>Apenas:</strong> Compile, Package, Stage, Boot</td></tr>
-        <tr><td>Engine Tests - Nightly Inc. - Linux</td><td>UE Tests</td><td><strong>Apenas:</strong> Compile, Package, Stage, Boot</td></tr>
+        <tr><th>Job</th><th>Aba</th><th>Checar</th></tr>
+        <tr><td>EditorPerf City Sample TSAN</td><td>UE Tests</td><td>Todos</td></tr>
+        <tr><td>Compilation Test - Win64, Mac</td><td>UE Tests</td><td>Todos</td></tr>
+        <tr><td>Low Level</td><td>UE Tests</td><td>Todos</td></tr>
+        <tr><td>Editor Tools Monolithics</td><td>UE Builds</td><td>Todos</td></tr>
+        <tr><td>Scheduled QAGame Package and Test</td><td>UE Builds</td><td>Todos</td></tr>
+        <tr><td>Lyra Test</td><td>UE Tests</td><td>Todos</td></tr>
+        <tr><td>Scheduled Lyra Package and Test</td><td>UE Builds</td><td>Todos</td></tr>
+        <tr><td>Engine Tests Inc. - Win64/Mac/Linux</td><td>UE Tests</td><td><strong>Compile, Package, Stage, Boot</strong></td></tr>
       </table>
-      <div class="warn-box"><strong>Atenção:</strong> Nos "Engine Tests - Nightly Incremental" só checa Compile, Package, Stage e Boot.</div>
     </div>
   </div>
 
   <div class="step-box">
-    <div class="step-header"><div class="step-num pc">04</div><div class="step-title">Entenda o significado das cores dos tiles</div><div class="step-toggle">▼</div></div>
+    <div class="step-header"><div class="step-num pc">04</div><div class="step-title">Significado das cores dos tiles</div><div class="step-toggle">▼</div></div>
     <div class="step-content">
       <div class="color-legend">
-        <div class="color-item"><div class="cdot" style="background:var(--green)"></div> Tudo OK</div>
+        <div class="color-item"><div class="cdot" style="background:var(--green)"></div> OK</div>
         <div class="color-item"><div class="cdot" style="background:var(--yellow)"></div> Warning</div>
         <div class="color-item"><div class="cdot" style="background:var(--red)"></div> Error</div>
         <div class="color-item"><div class="cdot" style="background:var(--accent)"></div> Em execução</div>
       </div>
-      <div class="tip-box"><strong>Dica:</strong> Jobs terminam entre 13h-15h CEST. Se demorar, escreva no <code>#buildfarm-support-ext</code>.</div>
     </div>
   </div>
 
   <div class="phase-label analyze">Fase 2 — Analisar Erros e Warnings</div>
 
   <div class="step-box">
-    <div class="step-header"><div class="step-num pa">05</div><div class="step-title">Abra cada erro/warning em nova aba</div><div class="step-toggle">▼</div></div>
-    <div class="step-content">
-      <p>Abaixo dos tiles, <strong>pontos com nomes de steps</strong> mostram os problemas. Clique direito → abrir em nova aba.</p>
-    </div>
+    <div class="step-header"><div class="step-num pa">05</div><div class="step-title">Abra erros/warnings em nova aba</div><div class="step-toggle">▼</div></div>
+    <div class="step-content"><p>Clique direito nos pontos com erro → abrir em nova aba.</p></div>
   </div>
 
   <div class="step-box">
-    <div class="step-header"><div class="step-num pa">06</div><div class="step-title">Verifique a aba Health do step</div><div class="step-toggle">▼</div></div>
+    <div class="step-header"><div class="step-num pa">06</div><div class="step-title">Verifique Health tab do step</div><div class="step-toggle">▼</div></div>
     <div class="step-content">
       <ul class="cklist">
-        <li>O issue já tem ticket no Jira?</li>
-        <li>Se sim — confira se corresponde ao erro</li>
+        <li>O issue já tem ticket Jira?</li>
+        <li>Se sim — confira se corresponde</li>
         <li>Se não — prossiga</li>
       </ul>
     </div>
   </div>
 
   <div class="step-box">
-    <div class="step-header"><div class="step-num pa">07</div><div class="step-title">Cheque o histórico (History tab)</div><div class="step-toggle">▼</div></div>
+    <div class="step-header"><div class="step-num pa">07</div><div class="step-title">Cheque History tab</div><div class="step-toggle">▼</div></div>
     <div class="step-content">
       <ul class="cklist">
-        <li>O erro é novo (só hoje)?</li>
+        <li>O erro é novo?</li>
         <li>Já aconteceu antes?</li>
         <li>É intermitente?</li>
       </ul>
@@ -532,116 +797,82 @@
   </div>
 
   <div class="step-box">
-    <div class="step-header"><div class="step-num pa">08</div><div class="step-title">Decida se o erro precisa ser reportado</div><div class="step-toggle">▼</div></div>
+    <div class="step-header"><div class="step-num pa">08</div><div class="step-title">Decida se precisa reportar</div><div class="step-toggle">▼</div></div>
     <div class="step-content">
-      <p><strong>NÃO reportar:</strong></p>
-      <ul class="cklist">
-        <li>Logs sem caminhos de arquivo</li>
-        <li>"Device not found" ou problemas de rede</li>
-        <li>Problemas de hardware Epic</li>
-      </ul>
-      <p><strong>SIM reportar:</strong></p>
-      <ul class="cklist">
-        <li>Logs detalhados com caminhos</li>
-        <li>Callstacks completas</li>
-        <li>Erros novos</li>
-      </ul>
+      <p><strong>NÃO reportar:</strong> logs sem caminhos, "device not found", problemas de rede/hardware.</p>
+      <p><strong>SIM reportar:</strong> logs com caminhos, callstacks, erros novos.</p>
     </div>
   </div>
 
   <div class="step-box">
-    <div class="step-header"><div class="step-num pa">09</div><div class="step-title">Antes de criar ticket, busque no Jira</div><div class="step-toggle">▼</div></div>
+    <div class="step-header"><div class="step-num pa">09</div><div class="step-title">Busque no Jira antes de criar</div><div class="step-toggle">▼</div></div>
     <div class="step-content">
-      <p><strong>Evite duplicatas!</strong></p>
       <ul class="cklist">
-        <li>Busque por caminho do arquivo no erro</li>
-        <li>Busque pelo nome do issue na Health tab</li>
+        <li>Busque por caminho do arquivo</li>
+        <li>Busque pelo nome do issue</li>
         <li>Confira <code>#ue-cis-ext</code> e <code>#ue-build-health-ext</code></li>
       </ul>
     </div>
   </div>
 
-  <div class="phase-label report">Fase 3 — Reportar no Slack e Jira</div>
+  <div class="phase-label report">Fase 3 — Reportar</div>
 
   <div class="step-box">
-    <div class="step-header"><div class="step-num pr">10</div><div class="step-title">Reporte ERRORS no Slack</div><div class="step-toggle">▼</div></div>
+    <div class="step-header"><div class="step-num pr">10</div><div class="step-title">Reporte ERRORS</div><div class="step-toggle">▼</div></div>
     <div class="step-content">
       <p>Canal: <code>#ue-build-health-ext</code></p>
-      <div class="slack-fmt">:bug-jira: //Fortnite/Main - [Step] - [Resumo do erro]</div>
-      <ul class="cklist">
-        <li>Cole o log e link do step na thread</li>
-        <li>Reaja com :bug:</li>
-      </ul>
-      <div class="danger-box"><strong>Importante:</strong> Comece com <code>:bug-jira:</code>.</div>
+      <div class="slack-fmt">:bug-jira: //Fortnite/Main - [Step] - [Resumo]</div>
+      <p>Thread: log + link + reação :bug:</p>
     </div>
   </div>
 
   <div class="step-box">
-    <div class="step-header"><div class="step-num pr">11</div><div class="step-title">Reporte WARNINGS no Slack</div><div class="step-toggle">▼</div></div>
+    <div class="step-header"><div class="step-num pr">11</div><div class="step-title">Reporte WARNINGS</div><div class="step-toggle">▼</div></div>
     <div class="step-content">
       <p>Canal: <code>#ue-cis-ext</code></p>
       <div class="slack-fmt">[NEW] //Fortnite/Main - [Step] - [Resumo]</div>
-      <ul class="cklist">
-        <li>Cole log e link do step</li>
-        <li>Reaja com :automationbot: — cria bug automaticamente</li>
-      </ul>
-      <div class="warn-box"><strong>Atenção:</strong> Preencha o Jira rápido depois.</div>
+      <p>Thread: log + link + reação :automationbot: (cria bug automático)</p>
     </div>
   </div>
 
   <div class="step-box">
     <div class="step-header"><div class="step-num pr">12</div><div class="step-title">Preencha o ticket no Jira</div><div class="step-toggle">▼</div></div>
     <div class="step-content">
-      <p><strong>Summary:</strong> <code>&lt;Stream&gt; - &lt;Step&gt; - &lt;Resumo&gt;</code></p>
-      <p><strong>Description:</strong> use <code>/code</code> e cole a callstack.</p>
       <table class="jtable">
         <tr><th>Tipo</th><th>P</th><th>S</th><th>Labels</th></tr>
         <tr><td>Blocker</td><td>P0</td><td>S0</td><td>CIS, BuildBlocker</td></tr>
         <tr><td>Error</td><td>P0</td><td>S1</td><td>CIS</td></tr>
         <tr><td>Warning</td><td>P1</td><td>S2</td><td>CIS, UECISWarning</td></tr>
       </table>
-      <p><strong>Regression:</strong> sempre "Yes".</p>
-      <div class="tip-box"><strong>CL Range:</strong> Step → History → clique direito no CL → "Open CL Range".</div>
-      <div class="tip-box"><strong>Logs:</strong> Step → View Log → Download. Anexe no Slack ANTES de criar o bug.</div>
+      <p>Regression: sempre "Yes".</p>
     </div>
   </div>
 
   <div class="step-box">
-    <div class="step-header"><div class="step-num pr">13</div><div class="step-title">Vincule o issue no Horde</div><div class="step-toggle">▼</div></div>
+    <div class="step-header"><div class="step-num pr">13</div><div class="step-title">Vincule no Horde</div><div class="step-toggle">▼</div></div>
     <div class="step-content">
-      <ul class="cklist">
-        <li>Health tab → clique no issue → Jira → Link Issue</li>
-        <li>Se Unassigned → atribua a pessoa correta</li>
-      </ul>
-      <div class="tip-box"><strong>Assignee:</strong> busque no P4 quem alterou o arquivo por último.</div>
+      <p>Health tab → issue → Jira → Link Issue → atribua a pessoa correta.</p>
     </div>
   </div>
 
-  <div class="phase-label end">Fase 4 — Final do Dia (EOD)</div>
+  <div class="phase-label end">Fase 4 — EOD</div>
 
   <div class="step-box">
-    <div class="step-header"><div class="step-num pe">14</div><div class="step-title">Envie o relatório EOD</div><div class="step-toggle">▼</div></div>
+    <div class="step-header"><div class="step-num pe">14</div><div class="step-title">Relatório EOD</div><div class="step-toggle">▼</div></div>
     <div class="step-content">
-      <p>Canal: <code>#ue-build-health-summary-ext</code></p>
-      <div class="slack-fmt">//Fortnite/Main - Build Health - DD/MM/YYYY
-
-[X] Issue Logged Today In Jira
-[X] Open CIS //Fortnite/Main Warnings
-[X] Current Open Issues (Excluding Warnings)
-Build Blocking Issues:
-  • None</div>
+      <p>Use o botão <strong>📊 EOD</strong> no topo para gerar o texto pronto e colar em <code>#ue-build-health-summary-ext</code>.</p>
     </div>
   </div>
 
 </div>
 </div>
+
+<div class="toast" id="toast"></div>
 
 <script>
 (function(){
 
-// ═════════════════════════════════════════
-// CONFIG
-// ═════════════════════════════════════════
+// ════════════ CONFIG ════════════
 const JOBS = [
   { id:"j1", name:"EditorPerf City Sample TSAN Tests", tab:"UE Tests", scope:"All steps" },
   { id:"j2", name:"Compilation Test - Win64, Mac", tab:"UE Tests", scope:"All steps" },
@@ -659,75 +890,95 @@ const COLS = [
   { id:"pending", label:"Pendente", icon:"○", color:"#8b949e" },
   { id:"checking", label:"Verificando", icon:"◐", color:"#58a6ff" },
   { id:"issue", label:"Issue Encontrado", icon:"⚠", color:"#d29922" },
-  { id:"reported", label:"Reportado", icon:"●", color:"#f85149" },
+  { id:"reported", label:"Reportado", icon:"●", color:"#8b6f5a" },
   { id:"done", label:"OK / Concluído", icon:"✓", color:"#3fb950" },
 ];
 
-const AVATARS = ["🟣","🔵","🟢","🟠","🔴","⚪"];
-const POLL_INTERVAL = 5000; // 5s
+// Cores HSL determinísticas para avatares (baseadas no hash do nome)
+const AVATAR_COLORS = [
+  "#7c3aed", "#2563eb", "#059669", "#dc2626", "#d97706",
+  "#db2777", "#0891b2", "#4f46e5", "#ea580c", "#65a30d"
+];
 
-// ═════════════════════════════════════════
-// STATE
-// ═════════════════════════════════════════
+const POLL_INTERVAL = 5000;
+const IDLE_TIMEOUT_MS = 10 * 60 * 1000;
+const STUCK_THRESHOLD_MS = 30 * 60 * 1000; // 30min em "issue" = card "stuck"
+
+// ════════════ STATE ════════════
 let backendUrl = localStorage.getItem("cis-backend-url") || "";
+let myId = localStorage.getItem("cis-my-id") || "";
+let theme = localStorage.getItem("cis-theme") || "dark";
+let filterBy = null; // id de membro para filtrar
 let members = [];
 let cardsMap = {};
 let dragJobId = null;
 let pollTimer = null;
+let stuckCheckTimer = null;
 let isLocalEdit = false;
 let jsonpCounter = 0;
+let lastActivity = Date.now();
+let isPausedReason = null;
+let editingNote = null; // jobId do card com nota em edição
+let lastSeenDay = new Date().toDateString();
 
-// ═════════════════════════════════════════
-// JSONP — core trick para contornar CORS
-// ═════════════════════════════════════════
-// Cria uma <script> tag apontando pro backend com um callback único.
-// O Apps Script retorna "callback({...data...})", que executa o callback
-// quando a tag carrega. Funciona porque <script> não é restrita por CORS.
-function jsonp(url, params, timeoutMs) {
-  timeoutMs = timeoutMs || 15000;
-  return new Promise((resolve, reject) => {
-    const cbName = "cisCb_" + (++jsonpCounter) + "_" + Date.now();
-    const qs = new URLSearchParams(params || {});
-    qs.set("callback", cbName);
-    const fullUrl = url + (url.indexOf("?") >= 0 ? "&" : "?") + qs.toString();
+// ════════════ TEMA ════════════
+function applyTheme(t) {
+  theme = t;
+  document.documentElement.setAttribute("data-theme", t);
+  document.getElementById("themeBtn").textContent = t === "dark" ? "🌙" : "☀️";
+  localStorage.setItem("cis-theme", t);
+}
+applyTheme(theme);
 
-    const script = document.createElement("script");
-    let done = false;
+document.getElementById("themeBtn").addEventListener("click", () => {
+  applyTheme(theme === "dark" ? "light" : "dark");
+});
 
-    const cleanup = () => {
-      if (window[cbName]) { try { delete window[cbName]; } catch(_) { window[cbName] = undefined; } }
-      if (script.parentNode) script.parentNode.removeChild(script);
-    };
-
-    const timer = setTimeout(() => {
-      if (done) return;
-      done = true; cleanup();
-      reject(new Error("JSONP timeout"));
-    }, timeoutMs);
-
-    window[cbName] = (data) => {
-      if (done) return;
-      done = true; clearTimeout(timer); cleanup();
-      resolve(data);
-    };
-
-    script.onerror = () => {
-      if (done) return;
-      done = true; clearTimeout(timer); cleanup();
-      reject(new Error("Script load failed"));
-    };
-
-    script.src = fullUrl;
-    document.head.appendChild(script);
-  });
+// ════════════ AVATAR HELPERS ════════════
+function hashCode(str) {
+  let h = 0;
+  for (let i = 0; i < str.length; i++) { h = ((h << 5) - h) + str.charCodeAt(i); h |= 0; }
+  return Math.abs(h);
 }
 
-// ═════════════════════════════════════════
-// DATE & TABS
-// ═════════════════════════════════════════
-const now = new Date();
-document.getElementById("todayDate").textContent = now.toLocaleDateString("pt-BR",{weekday:"long",day:"numeric",month:"long"});
+function getInitials(name) {
+  if (!name) return "?";
+  const parts = name.trim().split(/\s+/);
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
 
+function getAvatarColor(id) {
+  return AVATAR_COLORS[hashCode(id) % AVATAR_COLORS.length];
+}
+
+function avatarHTML(member, size) {
+  if (!member) return "";
+  size = size || "";
+  return `<span class="avatar ${size}" style="background:${getAvatarColor(member.id)}">${getInitials(member.name)}</span>`;
+}
+
+// ════════════ DATE ════════════
+function formatDate(d) {
+  return d.toLocaleDateString("pt-BR", { weekday: "short", day: "numeric", month: "short" });
+}
+
+function formatTime(d) {
+  return d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+}
+
+function timeAgo(iso) {
+  if (!iso) return "";
+  const diff = Date.now() - new Date(iso).getTime();
+  if (diff < 60000) return "agora";
+  if (diff < 3600000) return Math.floor(diff / 60000) + "min";
+  if (diff < 86400000) return formatTime(new Date(iso));
+  return formatDate(new Date(iso));
+}
+
+document.getElementById("datePill").textContent = "📅 " + formatDate(new Date());
+
+// ════════════ TABS ════════════
 document.querySelectorAll(".tab-btn").forEach(btn => {
   btn.addEventListener("click", () => {
     document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
@@ -737,6 +988,7 @@ document.querySelectorAll(".tab-btn").forEach(btn => {
   });
 });
 
+// Guide accordion
 document.querySelectorAll(".step-box .step-header").forEach(h => {
   h.addEventListener("click", () => h.parentElement.classList.toggle("open"));
 });
@@ -754,17 +1006,44 @@ document.querySelectorAll(".cklist li").forEach(li => {
   li.addEventListener("click", e => { e.stopPropagation(); li.classList.toggle("checked"); });
 });
 
-// ═════════════════════════════════════════
-// SETUP MODAL
-// ═════════════════════════════════════════
+// ════════════ TOAST ════════════
+function toast(msg, duration) {
+  const el = document.getElementById("toast");
+  el.textContent = msg;
+  el.classList.add("show");
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => el.classList.remove("show"), duration || 2000);
+}
+
+// ════════════ JSONP ════════════
+function jsonp(url, params, timeoutMs) {
+  timeoutMs = timeoutMs || 15000;
+  return new Promise((resolve, reject) => {
+    const cbName = "cisCb_" + (++jsonpCounter) + "_" + Date.now();
+    const qs = new URLSearchParams(params || {});
+    qs.set("callback", cbName);
+    const fullUrl = url + (url.indexOf("?") >= 0 ? "&" : "?") + qs.toString();
+    const script = document.createElement("script");
+    let done = false;
+    const cleanup = () => {
+      if (window[cbName]) { try { delete window[cbName]; } catch(_) { window[cbName] = undefined; } }
+      if (script.parentNode) script.parentNode.removeChild(script);
+    };
+    const timer = setTimeout(() => { if (done) return; done = true; cleanup(); reject(new Error("timeout")); }, timeoutMs);
+    window[cbName] = (data) => { if (done) return; done = true; clearTimeout(timer); cleanup(); resolve(data); };
+    script.onerror = () => { if (done) return; done = true; clearTimeout(timer); cleanup(); reject(new Error("Script load failed")); };
+    script.src = fullUrl;
+    document.head.appendChild(script);
+  });
+}
+
+// ════════════ SETUP URL MODAL ════════════
 function showSetupModal() {
   document.getElementById("setupModal").classList.remove("hidden");
   document.getElementById("urlInput").value = backendUrl;
   document.getElementById("urlInput").focus();
 }
-function hideSetupModal() {
-  document.getElementById("setupModal").classList.add("hidden");
-}
+function hideSetupModal() { document.getElementById("setupModal").classList.add("hidden"); }
 
 document.getElementById("saveUrlBtn").addEventListener("click", () => {
   const url = document.getElementById("urlInput").value.trim();
@@ -778,29 +1057,80 @@ document.getElementById("urlInput").addEventListener("keydown", e => {
   if (e.key === "Enter") document.getElementById("saveUrlBtn").click();
 });
 
-// ═════════════════════════════════════════
-// SYNC STATUS
-// ═════════════════════════════════════════
+// ════════════ IDENTIFY MODAL ════════════
+function showIdentifyModal() {
+  const modal = document.getElementById("identifyModal");
+  const list = document.getElementById("identifyMembers");
+  list.innerHTML = members.map(m =>
+    `<button class="identify-btn" data-mid="${m.id}">
+      ${avatarHTML(m)} ${escapeHtml(m.name)}
+    </button>`
+  ).join("");
+  list.querySelectorAll(".identify-btn").forEach(b => {
+    b.addEventListener("click", () => {
+      setMyIdentity(b.dataset.mid);
+      modal.classList.add("hidden");
+    });
+  });
+  modal.classList.remove("hidden");
+}
+
+document.getElementById("identifyAddBtn").addEventListener("click", async () => {
+  const inp = document.getElementById("identifyNewName");
+  const name = inp.value.trim();
+  if (!name) return;
+  const member = {
+    id: Date.now().toString(),
+    name,
+    avatar: getInitials(name)
+  };
+  await sendAction({ action: "addMember", id: member.id, name: member.name, avatar: member.avatar });
+  inp.value = "";
+  setMyIdentity(member.id);
+  document.getElementById("identifyModal").classList.add("hidden");
+});
+document.getElementById("identifyNewName").addEventListener("keydown", e => {
+  if (e.key === "Enter") document.getElementById("identifyAddBtn").click();
+});
+
+function setMyIdentity(id) {
+  myId = id;
+  localStorage.setItem("cis-my-id", id);
+  const m = getMember(id);
+  if (m) toast("Você entrou como " + m.name);
+  render();
+}
+
+document.getElementById("changeIdentityBtn").addEventListener("click", () => {
+  document.getElementById("settingsDrop").classList.remove("open");
+  showIdentifyModal();
+});
+
+// ════════════ SYNC STATUS ════════════
 function setSyncStatus(status, msg) {
   const dot = document.getElementById("syncDot");
   const text = document.getElementById("syncText");
   dot.className = "sync-dot";
   if (status === "syncing") { dot.classList.add("syncing"); text.textContent = msg || "Sincronizando..."; }
-  else if (status === "error") { dot.classList.add("error"); text.textContent = msg || "Erro de conexão"; }
+  else if (status === "error") { dot.classList.add("error"); text.textContent = msg || "Erro"; }
   else { text.textContent = msg || "Conectado"; }
 }
 
-// ═════════════════════════════════════════
-// BACKEND CALLS (via JSONP)
-// ═════════════════════════════════════════
+// ════════════ BACKEND ════════════
 function applyState(data) {
   if (!data || !data.ok) return;
   members = data.members || [];
   cardsMap = {};
   (data.cards || []).forEach(c => {
-    cardsMap[c.jobId] = { column: c.column || "pending", assignee: c.assignee || null };
+    cardsMap[c.jobId] = {
+      column: c.column || "pending",
+      assignee: c.assignee || null,
+      note: c.note || "",
+      updatedAt: c.updatedAt || "",
+      updatedBy: c.updatedBy || ""
+    };
   });
-  JOBS.forEach(j => { if (!cardsMap[j.id]) cardsMap[j.id] = { column:"pending", assignee:null }; });
+  JOBS.forEach(j => { if (!cardsMap[j.id]) cardsMap[j.id] = { column:"pending", assignee:null, note:"", updatedAt:"", updatedBy:"" }; });
 }
 
 async function fetchState() {
@@ -810,13 +1140,14 @@ async function fetchState() {
     const data = await jsonp(backendUrl, { action: "getState" });
     if (data.ok) {
       applyState(data);
+      // Se mudou o dia desde a última visualização, avisa
+      checkNewDay();
       render();
       setSyncStatus("ok");
     } else {
-      setSyncStatus("error", "Erro: " + (data.error || "desconhecido"));
+      setSyncStatus("error", data.error || "Erro");
     }
   } catch (err) {
-    console.error("Erro ao buscar estado:", err);
     setSyncStatus("error");
   }
 }
@@ -826,136 +1157,195 @@ async function sendAction(params) {
   isLocalEdit = true;
   try {
     setSyncStatus("syncing");
+    if (myId) params.by = myId;
     const data = await jsonp(backendUrl, params);
     if (data.ok) {
       applyState(data);
       render();
       setSyncStatus("ok");
     } else {
-      setSyncStatus("error", "Erro: " + (data.error || "desconhecido"));
+      setSyncStatus("error", data.error || "Erro");
     }
   } catch (err) {
-    console.error("Erro ao salvar:", err);
     setSyncStatus("error");
   } finally {
     isLocalEdit = false;
   }
 }
 
-// ═════════════════════════════════════════
-// SMART POLLING
-// Pausa quando aba não visível OU usuário inativo há 10min
-// Retoma automaticamente quando volta a interagir
-// ═════════════════════════════════════════
-const IDLE_TIMEOUT_MS = 10 * 60 * 1000; // 10 minutos sem interação
-let lastActivity = Date.now();
-let isPausedReason = null; // null | "hidden" | "idle"
-
+// ════════════ SMART POLLING ════════════
 function markActivity() {
   lastActivity = Date.now();
-  // Se estava pausado por idle e agora tem atividade, retoma imediatamente
   if (isPausedReason === "idle") {
     isPausedReason = null;
     setSyncStatus("ok");
     fetchState();
   }
 }
-
-["mousemove", "keydown", "click", "scroll", "touchstart"].forEach(evt => {
+["mousemove","keydown","click","scroll","touchstart"].forEach(evt => {
   document.addEventListener(evt, markActivity, { passive: true });
 });
-
 document.addEventListener("visibilitychange", () => {
   if (document.hidden) {
     isPausedReason = "hidden";
-    setSyncStatus("ok", "Pausado (aba oculta)");
-  } else {
-    if (isPausedReason === "hidden") {
-      isPausedReason = null;
-      markActivity();
-      fetchState(); // Pega o estado mais recente ao voltar pra aba
-    }
+    setSyncStatus("ok", "Pausado (oculto)");
+  } else if (isPausedReason === "hidden") {
+    isPausedReason = null;
+    markActivity();
+    fetchState();
   }
 });
-
 function shouldPoll() {
   if (isLocalEdit) return false;
   if (document.hidden) {
-    if (isPausedReason !== "hidden") {
-      isPausedReason = "hidden";
-      setSyncStatus("ok", "Pausado (aba oculta)");
-    }
+    if (isPausedReason !== "hidden") { isPausedReason = "hidden"; setSyncStatus("ok", "Pausado (oculto)"); }
     return false;
   }
   if (Date.now() - lastActivity > IDLE_TIMEOUT_MS) {
-    if (isPausedReason !== "idle") {
-      isPausedReason = "idle";
-      setSyncStatus("ok", "Pausado (inativo)");
-    }
+    if (isPausedReason !== "idle") { isPausedReason = "idle"; setSyncStatus("ok", "Pausado (inativo)"); }
     return false;
   }
-  if (isPausedReason && !document.hidden) {
-    isPausedReason = null;
-    setSyncStatus("ok");
-  }
+  if (isPausedReason && !document.hidden) { isPausedReason = null; setSyncStatus("ok"); }
   return true;
 }
-
 function startPolling() {
   if (pollTimer) clearInterval(pollTimer);
-  pollTimer = setInterval(() => {
-    if (shouldPoll()) fetchState();
-  }, POLL_INTERVAL);
+  pollTimer = setInterval(() => { if (shouldPoll()) fetchState(); }, POLL_INTERVAL);
 }
 
-// ═════════════════════════════════════════
-// ACTIONS
-// ═════════════════════════════════════════
+// ════════════ ACTIONS ════════════
 function moveCard(jobId, column) {
-  cardsMap[jobId] = { ...cardsMap[jobId], column };
+  cardsMap[jobId] = { ...cardsMap[jobId], column, updatedAt: new Date().toISOString(), updatedBy: myId };
   render();
   sendAction({ action: "moveCard", jobId, column });
 }
 
 function assignCard(jobId, memberId) {
-  cardsMap[jobId] = { ...cardsMap[jobId], assignee: memberId };
+  cardsMap[jobId] = { ...cardsMap[jobId], assignee: memberId, updatedAt: new Date().toISOString(), updatedBy: myId };
   render();
   sendAction({ action: "assignCard", jobId, assignee: memberId || "" });
+}
+
+function updateNote(jobId, note) {
+  cardsMap[jobId] = { ...cardsMap[jobId], note, updatedAt: new Date().toISOString(), updatedBy: myId };
+  render();
+  sendAction({ action: "updateNote", jobId, note });
 }
 
 function addMember() {
   const inp = document.getElementById("newMemberInput");
   const name = inp.value.trim();
   if (!name) return;
-  const member = {
-    id: Date.now().toString(),
-    name,
-    avatar: AVATARS[members.length % AVATARS.length]
-  };
+  const member = { id: Date.now().toString(), name, avatar: getInitials(name) };
   inp.value = "";
-  members.push(member);
-  render();
   sendAction({ action: "addMember", id: member.id, name: member.name, avatar: member.avatar });
 }
 
 function removeMember(id) {
-  members = members.filter(m => m.id !== id);
-  Object.keys(cardsMap).forEach(k => { if (cardsMap[k].assignee === id) cardsMap[k].assignee = null; });
-  render();
+  if (id === myId) { toast("Você não pode se remover."); return; }
   sendAction({ action: "removeMember", memberId: id });
 }
 
 function resetDay() {
-  JOBS.forEach(j => { cardsMap[j.id] = { column:"pending", assignee:null }; });
-  render();
   sendAction({ action: "resetDay" });
+  toast("Dia arquivado, cards resetados");
 }
 
 function getMember(id) { return members.find(m => m.id === id); }
 
-// ═════════════════════════════════════════
-// SETTINGS DROPDOWN
-// ═════════════════════════════════════════
+// ════════════ NEW DAY DETECTION ════════════
+function checkNewDay() {
+  const today = new Date().toDateString();
+  if (lastSeenDay !== today) {
+    lastSeenDay = today;
+    // Se tem cards que não estão em "pending", pergunta
+    const hasActivity = Object.values(cardsMap).some(c => c.column !== "pending");
+    if (hasActivity && !document.getElementById("setupModal").classList.contains("hidden") === false) {
+      setTimeout(() => {
+        if (confirm("📅 Novo dia detectado.\n\nQuer arquivar o dia anterior e resetar os cards para começar?")) {
+          resetDay();
+        }
+      }, 500);
+    }
+  }
+}
+
+// ════════════ EOD MODAL ════════════
+function countByColumn() {
+  const counts = { pending: 0, checking: 0, issue: 0, reported: 0, done: 0 };
+  JOBS.forEach(j => {
+    const c = cardsMap[j.id];
+    if (c && counts[c.column] !== undefined) counts[c.column]++;
+  });
+  return counts;
+}
+
+function buildEodText() {
+  const today = new Date().toLocaleDateString("pt-BR");
+  const counts = countByColumn();
+  const reported = JOBS.filter(j => cardsMap[j.id]?.column === "reported");
+  const done = JOBS.filter(j => cardsMap[j.id]?.column === "done");
+  const issues = JOBS.filter(j => cardsMap[j.id]?.column === "issue");
+
+  let txt = `//Fortnite/Main - Build Health - ${today}\n\n`;
+  txt += `[${counts.reported}] Issue Logged Today In Jira\n`;
+  txt += `[?] Open CIS //Fortnite/Main Warnings\n`;
+  txt += `[?] Current Open Issues (Excluding Warnings)\n`;
+  txt += `Build Blocking Issues:\n  • None\n\n`;
+  txt += `---\n`;
+  txt += `Checados hoje: ${done.length + reported.length} de ${JOBS.length}\n`;
+  if (reported.length > 0) {
+    txt += `\nReportados:\n`;
+    reported.forEach(j => {
+      const c = cardsMap[j.id];
+      txt += `  • ${j.name}`;
+      if (c.note) txt += ` — ${c.note}`;
+      txt += `\n`;
+    });
+  }
+  if (issues.length > 0) {
+    txt += `\nAinda em investigação:\n`;
+    issues.forEach(j => {
+      txt += `  • ${j.name}\n`;
+    });
+  }
+  return txt;
+}
+
+function showEodModal() {
+  const counts = countByColumn();
+  document.getElementById("eodDate").textContent = "Resumo de " + new Date().toLocaleDateString("pt-BR");
+  document.getElementById("eodStats").innerHTML = `
+    <div class="eod-stat"><div class="eod-stat-num" style="color:var(--accent)">${counts.checking}</div><div class="eod-stat-label">Checando</div></div>
+    <div class="eod-stat"><div class="eod-stat-num" style="color:var(--yellow)">${counts.issue}</div><div class="eod-stat-label">Com Issue</div></div>
+    <div class="eod-stat"><div class="eod-stat-num" style="color:var(--reported)">${counts.reported}</div><div class="eod-stat-label">Reportado</div></div>
+    <div class="eod-stat"><div class="eod-stat-num" style="color:var(--green)">${counts.done}</div><div class="eod-stat-label">OK</div></div>
+  `;
+  document.getElementById("eodPreview").textContent = buildEodText();
+  document.getElementById("eodModal").classList.remove("hidden");
+}
+
+document.getElementById("eodBtn").addEventListener("click", showEodModal);
+document.getElementById("eodCloseBtn").addEventListener("click", () => {
+  document.getElementById("eodModal").classList.add("hidden");
+});
+document.getElementById("eodCopyBtn").addEventListener("click", async () => {
+  const txt = buildEodText();
+  try {
+    await navigator.clipboard.writeText(txt);
+    const btn = document.getElementById("eodCopyBtn");
+    btn.classList.add("copied");
+    btn.textContent = "✓ Copiado!";
+    setTimeout(() => {
+      btn.classList.remove("copied");
+      btn.textContent = "📋 Copiar";
+    }, 1500);
+  } catch (e) {
+    toast("Erro ao copiar. Selecione o texto manualmente.");
+  }
+});
+
+// ════════════ SETTINGS DROP ════════════
 const gearBtn = document.getElementById("gearBtn");
 const settingsDrop = document.getElementById("settingsDrop");
 gearBtn.addEventListener("click", e => { e.stopPropagation(); settingsDrop.classList.toggle("open"); });
@@ -966,32 +1356,70 @@ document.addEventListener("click", e => {
 document.getElementById("addMemberBtn").addEventListener("click", addMember);
 document.getElementById("newMemberInput").addEventListener("keydown", e => { if (e.key === "Enter") addMember(); });
 document.getElementById("resetBtn").addEventListener("click", () => {
-  if (confirm("Voltar todos os cards para 'Pendente'?")) resetDay();
+  if (confirm("Arquivar o dia atual no histórico e resetar todos os cards?")) resetDay();
 });
 document.getElementById("changeUrlBtn").addEventListener("click", () => {
   settingsDrop.classList.remove("open");
   showSetupModal();
 });
 
-// ═════════════════════════════════════════
-// RENDER
-// ═════════════════════════════════════════
-function render() {
-  document.getElementById("membersPills").innerHTML = members.map(m =>
-    `<span class="member-pill"><span style="font-size:13px">${m.avatar}</span> ${escapeHtml(m.name)}</span>`
-  ).join("");
+// ════════════ KEYBOARD SHORTCUTS ════════════
+document.addEventListener("keydown", e => {
+  if (editingNote) return; // não captura shortcuts enquanto edita nota
+  if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") return;
 
+  if (e.shiftKey) {
+    if (e.key === "T") { applyTheme(theme === "dark" ? "light" : "dark"); e.preventDefault(); }
+    if (e.key === "R") { showEodModal(); e.preventDefault(); }
+    if (e.key === "G") {
+      const tabs = document.querySelectorAll(".tab-btn");
+      const active = document.querySelector(".tab-btn.active");
+      const idx = Array.from(tabs).indexOf(active);
+      tabs[(idx + 1) % tabs.length].click();
+      e.preventDefault();
+    }
+  }
+});
+
+// ════════════ RENDER ════════════
+function render() {
+  // Members pills (top toolbar) — clicáveis pra filtrar
+  document.getElementById("membersPills").innerHTML = members.map(m => {
+    const isMe = m.id === myId;
+    const isFilter = filterBy === m.id;
+    return `<span class="member-pill ${isFilter ? 'filtered' : ''} ${isMe ? 'me' : ''}" data-filter-id="${m.id}" title="Clique para filtrar">
+      ${avatarHTML(m)} ${escapeHtml(m.name)}${isMe ? ' <span class="me-tag">eu</span>' : ''}
+    </span>`;
+  }).join("");
+  document.querySelectorAll(".member-pill[data-filter-id]").forEach(pill => {
+    pill.addEventListener("click", () => {
+      const id = pill.dataset.filterId;
+      filterBy = filterBy === id ? null : id;
+      render();
+    });
+  });
+
+  // Settings members
   const smEl = document.getElementById("settingsMembers");
-  smEl.innerHTML = members.map(m =>
-    `<div class="settings-member-row">
-      <span><span>${m.avatar}</span> ${escapeHtml(m.name)}</span>
-      <button class="remove-btn" data-mid="${m.id}">✕</button>
-    </div>`
-  ).join("");
+  smEl.innerHTML = members.map(m => `
+    <div class="settings-member-row">
+      <span>${avatarHTML(m)} ${escapeHtml(m.name)} ${m.id === myId ? '<span class="me-tag">eu</span>' : ''}</span>
+      ${m.id !== myId ? `<button class="remove-btn" data-mid="${m.id}">✕</button>` : ''}
+    </div>
+  `).join("");
   smEl.querySelectorAll(".remove-btn").forEach(b => {
     b.addEventListener("click", e => { e.stopPropagation(); removeMember(b.dataset.mid); });
   });
 
+  // Mini stats no topo
+  const counts = countByColumn();
+  document.getElementById("miniStats").innerHTML = `
+    <span class="mini-stat"><span class="mini-stat-dot" style="background:var(--yellow)"></span>${counts.issue}</span>
+    <span class="mini-stat"><span class="mini-stat-dot" style="background:var(--reported)"></span>${counts.reported}</span>
+    <span class="mini-stat"><span class="mini-stat-dot" style="background:var(--green)"></span>${counts.done}</span>
+  `;
+
+  // Columns
   const colsEl = document.getElementById("kanbanColumns");
   colsEl.innerHTML = "";
 
@@ -1012,7 +1440,7 @@ function render() {
 
     const hdr = document.createElement("div");
     hdr.className = "col-header";
-    hdr.style.borderBottomColor = col.color + "22";
+    hdr.style.borderBottomColor = col.color + "44";
     hdr.innerHTML = `
       <div class="col-header-left">
         <span class="col-icon" style="color:${col.color}">${col.icon}</span>
@@ -1028,67 +1456,151 @@ function render() {
     if (colJobs.length === 0) {
       cardsArea.innerHTML = `<div class="col-empty">Vazio</div>`;
     } else {
-      colJobs.forEach(job => {
-        const c = cardsMap[job.id];
-        const assignee = c.assignee ? getMember(c.assignee) : null;
-
-        const card = document.createElement("div");
-        card.className = "card";
-        card.draggable = true;
-        card.addEventListener("dragstart", e => { dragJobId = job.id; card.classList.add("dragging"); e.dataTransfer.effectAllowed = "move"; });
-        card.addEventListener("dragend", () => { dragJobId = null; card.classList.remove("dragging"); });
-
-        const tagClass = job.tab === "UE Tests" ? "tag-tests" : "tag-builds";
-        const scopeTag = job.scope !== "All steps" ? `<span class="tag tag-scope">Scope</span>` : "";
-        const assigneeLabel = assignee
-          ? `<span style="font-size:12px">${assignee.avatar}</span> ${escapeHtml(assignee.name)}`
-          : `<span style="font-size:11px">+ Atribuir</span>`;
-
-        card.innerHTML = `
-          <div class="card-title">${escapeHtml(job.name)}</div>
-          <div class="card-footer">
-            <div class="card-tags"><span class="tag ${tagClass}">${job.tab}</span>${scopeTag}</div>
-            <button class="assignee-btn ${assignee ? 'has-person' : ''}" data-job="${job.id}">
-              ${assigneeLabel}
-              <div class="assignee-drop" data-adrop="${job.id}"></div>
-            </button>
-          </div>
-        `;
-
-        const aBtn = card.querySelector(".assignee-btn");
-        aBtn.addEventListener("click", e => {
-          e.stopPropagation();
-          const drop = card.querySelector(".assignee-drop");
-          const isOpen = drop.classList.contains("open");
-          document.querySelectorAll(".assignee-drop.open").forEach(d => d.classList.remove("open"));
-
-          if (!isOpen) {
-            let html = `<div class="assignee-opt" data-assign-to=""><span style="font-size:12px">—</span> Ninguém</div>`;
-            members.forEach(m => {
-              const sel = c.assignee === m.id ? "selected" : "";
-              html += `<div class="assignee-opt ${sel}" data-assign-to="${m.id}">
-                <span style="font-size:12px">${m.avatar}</span> ${escapeHtml(m.name)}
-              </div>`;
-            });
-            drop.innerHTML = html;
-            drop.classList.add("open");
-            drop.querySelectorAll(".assignee-opt").forEach(opt => {
-              opt.addEventListener("click", ev => {
-                ev.stopPropagation();
-                const mid = opt.dataset.assignTo || null;
-                assignCard(job.id, mid);
-              });
-            });
-          }
-        });
-
-        cardsArea.appendChild(card);
-      });
+      colJobs.forEach(job => cardsArea.appendChild(buildCard(job)));
     }
 
     colDiv.appendChild(cardsArea);
     colsEl.appendChild(colDiv);
   });
+}
+
+function buildCard(job) {
+  const c = cardsMap[job.id] || {};
+  const assignee = c.assignee ? getMember(c.assignee) : null;
+  const updater = c.updatedBy ? getMember(c.updatedBy) : null;
+
+  const card = document.createElement("div");
+  card.className = "card";
+  card.draggable = true;
+
+  // Filtro por pessoa
+  if (filterBy && c.assignee !== filterBy && c.updatedBy !== filterBy) {
+    card.classList.add("filtered-out");
+  }
+
+  // Card "stuck" (>30min em issue)
+  if (c.column === "issue" && c.updatedAt) {
+    const age = Date.now() - new Date(c.updatedAt).getTime();
+    if (age > STUCK_THRESHOLD_MS) card.classList.add("stuck");
+  }
+
+  card.addEventListener("dragstart", e => {
+    dragJobId = job.id;
+    card.classList.add("dragging");
+    e.dataTransfer.effectAllowed = "move";
+  });
+  card.addEventListener("dragend", () => { dragJobId = null; card.classList.remove("dragging"); });
+
+  const tagClass = job.tab === "UE Tests" ? "tag-tests" : "tag-builds";
+  const scopeTag = job.scope !== "All steps" ? `<span class="tag tag-scope" title="Apenas Compile, Package, Stage, Boot">Scope</span>` : "";
+
+  // Link pro Horde
+  const hordeBaseUrl = "https://horde.devtools.epicgames.com";
+  const extLink = `<a href="${hordeBaseUrl}" target="_blank" class="card-ext-link" title="Abrir no Horde" onclick="event.stopPropagation()">↗</a>`;
+
+  card.innerHTML = `
+    <div class="card-head">
+      <div class="card-title">${escapeHtml(job.name)}</div>
+      ${extLink}
+    </div>
+    <div class="card-footer">
+      <div class="card-tags">
+        <span class="tag ${tagClass}">${job.tab}</span>
+        ${scopeTag}
+      </div>
+      <button class="assignee-btn ${assignee ? 'has-person' : 'no-person'}" data-job="${job.id}">
+        ${assignee
+          ? avatarHTML(assignee, "sm") + " " + escapeHtml(assignee.name)
+          : `<span style="font-size:11px">+ Atribuir</span>`}
+        <div class="assignee-drop"></div>
+      </button>
+    </div>
+    ${renderNote(job, c)}
+    ${updater && c.updatedAt ? `
+      <div class="card-meta">
+        ${avatarHTML(updater, "sm")}
+        <span class="card-meta-time">${escapeHtml(updater.name)} · ${timeAgo(c.updatedAt)}</span>
+      </div>
+    ` : ''}
+  `;
+
+  // Assignee dropdown
+  const aBtn = card.querySelector(".assignee-btn");
+  aBtn.addEventListener("click", e => {
+    e.stopPropagation();
+    const drop = aBtn.querySelector(".assignee-drop");
+    const isOpen = drop.classList.contains("open");
+    document.querySelectorAll(".assignee-drop.open").forEach(d => d.classList.remove("open"));
+    if (!isOpen) {
+      let html = `<div class="assignee-opt" data-assign-to="">— Ninguém</div>`;
+      members.forEach(m => {
+        const sel = c.assignee === m.id ? "selected" : "";
+        html += `<div class="assignee-opt ${sel}" data-assign-to="${m.id}">
+          ${avatarHTML(m, "sm")} ${escapeHtml(m.name)}
+        </div>`;
+      });
+      drop.innerHTML = html;
+      drop.classList.add("open");
+      drop.querySelectorAll(".assignee-opt").forEach(opt => {
+        opt.addEventListener("click", ev => {
+          ev.stopPropagation();
+          assignCard(job.id, opt.dataset.assignTo || null);
+        });
+      });
+    }
+  });
+
+  // Note click → edit
+  const noteEl = card.querySelector(".card-note");
+  if (noteEl) {
+    noteEl.addEventListener("click", e => {
+      if (e.target.tagName === "A") return; // deixa clicar em link
+      e.stopPropagation();
+      startEditNote(card, job.id, c.note || "");
+    });
+  }
+
+  return card;
+}
+
+function renderNote(job, c) {
+  if (c.note) {
+    return `<div class="card-note">${linkify(escapeHtml(c.note))}</div>`;
+  }
+  return `<div class="card-note empty">+ adicionar nota ou link</div>`;
+}
+
+function startEditNote(card, jobId, currentNote) {
+  if (editingNote) return;
+  editingNote = jobId;
+  const noteEl = card.querySelector(".card-note");
+  noteEl.outerHTML = `<textarea class="card-note-input" placeholder="Ex: UE-368989 ou link do Horde..." rows="2">${escapeHtml(currentNote)}</textarea>`;
+  const ta = card.querySelector(".card-note-input");
+  ta.focus();
+  ta.setSelectionRange(ta.value.length, ta.value.length);
+
+  const finish = (save) => {
+    editingNote = null;
+    if (save && ta.value !== currentNote) {
+      updateNote(jobId, ta.value.trim());
+    } else {
+      render();
+    }
+  };
+
+  ta.addEventListener("blur", () => finish(true));
+  ta.addEventListener("keydown", e => {
+    if (e.key === "Escape") { finish(false); }
+    if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) { ta.blur(); }
+  });
+}
+
+function linkify(s) {
+  // UE-12345 → link pro Jira
+  s = s.replace(/\b(UE-\d+)\b/g, '<a href="https://jira.it.epicgames.com/browse/$1" target="_blank">$1</a>');
+  // URLs soltas
+  s = s.replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank">$1</a>');
+  return s;
 }
 
 document.addEventListener("click", () => {
@@ -1099,19 +1611,29 @@ function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 }
 
-// ═════════════════════════════════════════
-// INIT
-// ═════════════════════════════════════════
+// Re-render periódico pra atualizar "time ago" e flag "stuck"
+setInterval(() => {
+  if (!document.hidden && !editingNote) render();
+}, 60000);
+
+// ════════════ INIT ════════════
 async function init() {
-  JOBS.forEach(j => { cardsMap[j.id] = { column:"pending", assignee:null }; });
+  JOBS.forEach(j => { cardsMap[j.id] = { column:"pending", assignee:null, note:"", updatedAt:"", updatedBy:"" }; });
   render();
   await fetchState();
   startPolling();
+
+  // Se ainda não se identificou, mostra modal
+  if (!myId || !getMember(myId)) {
+    if (members.length > 0 || members.length === 0) {
+      showIdentifyModal();
+    }
+  }
 }
 
 if (!backendUrl) {
   showSetupModal();
-  JOBS.forEach(j => { cardsMap[j.id] = { column:"pending", assignee:null }; });
+  JOBS.forEach(j => { cardsMap[j.id] = { column:"pending", assignee:null, note:"", updatedAt:"", updatedBy:"" }; });
   render();
 } else {
   init();
